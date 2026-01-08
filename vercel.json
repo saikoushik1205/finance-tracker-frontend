@@ -1,8 +1,4 @@
 {
-  "installCommand": "npm install --legacy-peer-deps",
-  "buildCommand": "npm run build:prod",
-  "outputDirectory": "dist/fintrack-frontend/browser",
-  "framework": null,
   "rewrites": [
     {
       "source": "/(.*)",
