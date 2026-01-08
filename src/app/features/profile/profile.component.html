@@ -1,0 +1,229 @@
+<app-navbar></app-navbar>
+
+<div class="profile-container">
+  @if (loading) {
+  <div class="loading-state glass-card">
+    <div class="spinner"></div>
+    <p class="text-muted">Loading profile...</p>
+  </div>
+  } @else if (user) {
+  <div class="page-header fade-in">
+    <h1>👤 Profile</h1>
+    <p class="text-muted">Manage your account settings</p>
+  </div>
+
+  <!-- Profile Card -->
+  <div class="profile-card glass-card fade-in">
+    <div class="profile-header">
+      <div class="profile-avatar">
+        @if (user.photoURL) {
+        <img [src]="user.photoURL" alt="Profile Photo" />
+        } @else {
+        <div class="avatar-initials">{{ getInitials() }}</div>
+        }
+      </div>
+      <div class="profile-info">
+        <h2>{{ user.displayName || user.email }}</h2>
+        <p class="profile-email">{{ user.email }}</p>
+        @if (user.emailVerified) {
+        <span class="verified-badge">✓ Verified</span>
+        } @if (hasInterestAccess()) {
+        <span class="special-badge">🌟 Premium Access</span>
+        }
+      </div>
+      @if (!editingProfile) {
+      <button class="btn btn-secondary" (click)="startEditProfile()">
+        ✏️ Edit Profile
+      </button>
+      }
+    </div>
+
+    @if (editingProfile) {
+    <form (ngSubmit)="saveProfile()" class="profile-edit-form">
+      <div class="form-group">
+        <label for="displayName">Display Name</label>
+        <input
+          type="text"
+          id="displayName"
+          class="form-control"
+          [(ngModel)]="profileForm.displayName"
+          name="displayName"
+          placeholder="Your name"
+        />
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          class="form-control"
+          [(ngModel)]="profileForm.email"
+          name="email"
+          disabled
+          placeholder="your@email.com"
+        />
+        <small class="form-hint">Email cannot be changed</small>
+      </div>
+      <div class="edit-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="cancelEditProfile()"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+    } @else {
+    <div class="profile-details">
+      <div class="detail-row">
+        <span class="detail-label">📧 Email</span>
+        <span class="detail-value">{{ user.email }}</span>
+      </div>
+      @if (user.phoneNumber) {
+      <div class="detail-row">
+        <span class="detail-label">📱 Phone</span>
+        <span class="detail-value">{{ user.phoneNumber }}</span>
+      </div>
+      }
+      <div class="detail-row">
+        <span class="detail-label">📅 Member Since</span>
+        <span class="detail-value">{{ getMemberSince() }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">🆔 User ID</span>
+        <span class="detail-value user-id">{{ user.userId }}</span>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Account Stats -->
+  @if (userStats) {
+  <div class="stats-card glass-card slide-in" style="animation-delay: 0.1s">
+    <h3>📊 Account Overview</h3>
+    <p class="section-subtitle">Your financial summary</p>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-icon lending">💸</div>
+        <div class="stat-content">
+          <p class="stat-label">Total Lent</p>
+          <p class="stat-value">
+            {{ formatCurrency(userStats.lending?.total || 0) }}
+          </p>
+        </div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon borrowing">💰</div>
+        <div class="stat-content">
+          <p class="stat-label">Total Borrowed</p>
+          <p class="stat-value">
+            {{ formatCurrency(userStats.borrowing?.total || 0) }}
+          </p>
+        </div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon earnings">💵</div>
+        <div class="stat-content">
+          <p class="stat-label">Total Earnings</p>
+          <p class="stat-value">
+            {{ formatCurrency(userStats.earnings?.total || 0) }}
+          </p>
+        </div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon expenses">💳</div>
+        <div class="stat-content">
+          <p class="stat-label">Total Expenses</p>
+          <p class="stat-value">
+            {{ formatCurrency(userStats.expenses?.total || 0) }}
+          </p>
+        </div>
+      </div>
+      @if (hasInterestAccess()) {
+      <div class="stat-box">
+        <div class="stat-icon interest">📈</div>
+        <div class="stat-content">
+          <p class="stat-label">Total Interest</p>
+          <p class="stat-value">
+            {{ formatCurrency(userStats.interest?.total || 0) }}
+          </p>
+        </div>
+      </div>
+      }
+      <div class="stat-box">
+        <div class="stat-icon balance">💎</div>
+        <div class="stat-content">
+          <p class="stat-label">Net Balance</p>
+          <p
+            class="stat-value"
+            [class.positive]="userStats.netBalance >= 0"
+            [class.negative]="userStats.netBalance < 0"
+          >
+            {{ formatCurrency(userStats.netBalance || 0) }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Account Actions -->
+  <div class="actions-card glass-card slide-in" style="animation-delay: 0.2s">
+    <h3>⚙️ Account Actions</h3>
+    <div class="actions-list">
+      <button class="action-button">
+        <span class="action-icon">🔔</span>
+        <div class="action-info">
+          <p class="action-title">Notifications</p>
+          <p class="action-desc">Manage your notification preferences</p>
+        </div>
+        <span class="action-arrow">→</span>
+      </button>
+      <button class="action-button">
+        <span class="action-icon">🔒</span>
+        <div class="action-info">
+          <p class="action-title">Privacy Settings</p>
+          <p class="action-desc">Control your data and privacy</p>
+        </div>
+        <span class="action-arrow">→</span>
+      </button>
+      <button class="action-button">
+        <span class="action-icon">📥</span>
+        <div class="action-info">
+          <p class="action-title">Export Data</p>
+          <p class="action-desc">Download all your financial data</p>
+        </div>
+        <span class="action-arrow">→</span>
+      </button>
+      <button class="action-button danger" (click)="logout()">
+        <span class="action-icon">🚪</span>
+        <div class="action-info">
+          <p class="action-title">Logout</p>
+          <p class="action-desc">Sign out from your account</p>
+        </div>
+        <span class="action-arrow">→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- App Info -->
+  <div class="app-info glass-card slide-in" style="animation-delay: 0.3s">
+    <h4>FinTrack</h4>
+    <p class="app-version">Version 1.0.0</p>
+    <p class="app-description">
+      A modern financial tracking application to help you manage your money
+      efficiently.
+    </p>
+    <div class="app-links">
+      <a href="#" class="app-link">Terms of Service</a>
+      <span class="separator">•</span>
+      <a href="#" class="app-link">Privacy Policy</a>
+      <span class="separator">•</span>
+      <a href="#" class="app-link">Support</a>
+    </div>
+    <p class="copyright">© 2024 FinTrack. All rights reserved.</p>
+  </div>
+  }
+</div>

@@ -1,0 +1,264 @@
+<app-navbar></app-navbar>
+
+<div class="dashboard-container">
+  <div class="dashboard-header fade-in">
+    <div>
+      <h1>Welcome back, {{ userName }}! 👋</h1>
+      <p class="text-muted">Here's your financial overview</p>
+    </div>
+    <button
+      class="btn btn-primary btn-ripple btn-glow btn-scale-active"
+      (click)="loadDashboardStats()"
+    >
+      <span>🔄</span>
+      Refresh
+    </button>
+  </div>
+
+  @if (loading) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p class="text-muted">Loading your financial data...</p>
+  </div>
+  } @else if (error) {
+  <div class="error-state glass-card">
+    <p class="text-danger">{{ error }}</p>
+    <button
+      class="btn btn-primary btn-ripple btn-glow btn-scale-active"
+      (click)="loadDashboardStats()"
+    >
+      Try Again
+    </button>
+  </div>
+  } @else if (stats) {
+  <!-- Net Balance Card -->
+  <div class="net-balance-card glass-card slide-in">
+    <div class="balance-header">
+      <h3>Net Balance</h3>
+      <span class="balance-icon">💰</span>
+    </div>
+    <div class="balance-amount" [ngClass]="getNetBalanceClass()">
+      {{ formatCurrency(stats.netBalance) }}
+    </div>
+    <div class="balance-subtext">
+      @if (stats.netBalance >= 0) {
+      <span class="text-success">● You're doing great!</span>
+      } @else {
+      <span class="text-danger">● Manage your finances</span>
+      }
+    </div>
+  </div>
+
+  <!-- Summary Cards Grid -->
+  <div class="stats-grid">
+    <!-- Total Money Lended Card -->
+    <div class="stat-card glass-card slide-in">
+      <div class="stat-icon lending">💸</div>
+      <div class="stat-content">
+        <h4>Total Money Lended</h4>
+        <p class="stat-value text-success">
+          {{ formatCurrency(stats.summary.totalLent) }}
+        </p>
+        <p class="stat-label">All lending transactions</p>
+      </div>
+    </div>
+
+    <!-- Total Money Borrowed Card -->
+    <div class="stat-card glass-card slide-in">
+      <div class="stat-icon borrowing">💳</div>
+      <div class="stat-content">
+        <h4>Total Money Borrowed</h4>
+        <p class="stat-value text-danger">
+          {{ formatCurrency(stats.summary.totalBorrowed) }}
+        </p>
+        <p class="stat-label">All borrowing transactions</p>
+      </div>
+    </div>
+
+    <!-- Cash + Bank Card -->
+    <div class="stat-card glass-card slide-in">
+      <div class="stat-icon cash">🏦</div>
+      <div class="stat-content">
+        <h4>Cash + Bank</h4>
+        <p class="stat-value">
+          {{ formatCurrency(stats.summary.availableCash) }}
+        </p>
+        <p class="stat-label">Available balance</p>
+      </div>
+    </div>
+
+    <!-- Total Expenses Card -->
+    <div class="stat-card glass-card slide-in">
+      <div class="stat-icon expense">🧾</div>
+      <div class="stat-content">
+        <h4>Total Expenses</h4>
+        <p class="stat-value text-danger">
+          {{ formatCurrency(stats.summary.totalExpenses) }}
+        </p>
+        <p class="stat-label">All expenses transactions</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Cards -->
+  <div class="section-cards-grid">
+    <!-- Lending -->
+    <a
+      routerLink="/lending"
+      class="section-card glass-card card-stagger card-hover-lift shine"
+    >
+      <div class="section-header">
+        <span class="section-icon icon-hover-rotate">💸</span>
+        <h3>Lending</h3>
+      </div>
+      <div class="section-stats">
+        <div class="section-stat">
+          <span class="label">Total</span>
+          <span class="value">{{ formatCurrency(stats.lending.total) }}</span>
+        </div>
+        <div class="section-stat">
+          <span class="label">Completed</span>
+          <span class="value text-success">{{
+            formatCurrency(stats.lending.completed)
+          }}</span>
+        </div>
+        <div class="section-stat">
+          <span class="label">Pending</span>
+          <span class="value text-warning">{{
+            formatCurrency(stats.lending.pending)
+          }}</span>
+        </div>
+      </div>
+      <div class="section-footer">
+        <span>View Details →</span>
+      </div>
+    </a>
+
+    <!-- Borrowing -->
+    <a
+      routerLink="/borrowing"
+      class="section-card glass-card card-stagger card-hover-lift shine"
+    >
+      <div class="section-header">
+        <span class="section-icon icon-hover-rotate">💳</span>
+        <h3>Borrowing</h3>
+      </div>
+      <div class="section-stats">
+        <div class="section-stat">
+          <span class="label">Total</span>
+          <span class="value">{{ formatCurrency(stats.borrowing.total) }}</span>
+        </div>
+        <div class="section-stat">
+          <span class="label">Completed</span>
+          <span class="value text-success">{{
+            formatCurrency(stats.borrowing.completed)
+          }}</span>
+        </div>
+        <div class="section-stat">
+          <span class="label">Pending</span>
+          <span class="value text-warning">{{
+            formatCurrency(stats.borrowing.pending)
+          }}</span>
+        </div>
+      </div>
+      <div class="section-footer">
+        <span>View Details →</span>
+      </div>
+    </a>
+
+    <!-- Earnings -->
+    <a
+      routerLink="/earnings"
+      class="section-card glass-card card-stagger card-hover-lift shine"
+    >
+      <div class="section-header">
+        <span class="section-icon icon-hover-rotate">💵</span>
+        <h3>Earnings</h3>
+      </div>
+      <div class="section-stats">
+        <div class="section-stat">
+          <span class="label">Total</span>
+          <span class="value">{{ formatCurrency(stats.earnings.total) }}</span>
+        </div>
+        <div class="section-stat">
+          <span class="label">Completed</span>
+          <span class="value text-success">{{
+            formatCurrency(stats.earnings.completed)
+          }}</span>
+        </div>
+        <div class="section-stat">
+          <span class="label">Pending</span>
+          <span class="value text-warning">{{
+            formatCurrency(stats.earnings.pending)
+          }}</span>
+        </div>
+      </div>
+      <div class="section-footer">
+        <span>View Details →</span>
+      </div>
+    </a>
+
+    <!-- Expenses -->
+    <a
+      routerLink="/expenses"
+      class="section-card glass-card card-stagger card-hover-lift shine"
+    >
+      <div class="section-header">
+        <span class="section-icon icon-hover-rotate">🧾</span>
+        <h3>Expenses</h3>
+      </div>
+      <div class="section-stats">
+        <div class="section-stat">
+          <span class="label">Total</span>
+          <span class="value">{{ formatCurrency(stats.expenses.total) }}</span>
+        </div>
+        <div class="section-stat">
+          <span class="label">Completed</span>
+          <span class="value text-success">{{
+            formatCurrency(stats.expenses.completed)
+          }}</span>
+        </div>
+        <div class="section-stat">
+          <span class="label">Pending</span>
+          <span class="value text-warning">{{
+            formatCurrency(stats.expenses.pending)
+          }}</span>
+        </div>
+      </div>
+      <div class="section-footer">
+        <span>View Details →</span>
+      </div>
+    </a>
+
+    <!-- Cash & Bank -->
+    <a
+      routerLink="/other"
+      class="section-card glass-card card-stagger card-hover-lift shine"
+    >
+      <div class="section-header">
+        <span class="section-icon icon-hover-rotate">🏦</span>
+        <h3>Cash & Bank</h3>
+      </div>
+      <div class="section-stats">
+        <div class="section-stat">
+          <span class="label">Cash</span>
+          <span class="value">{{ formatCurrency(stats.cashBank.cash) }}</span>
+        </div>
+        <div class="section-stat">
+          <span class="label">Bank</span>
+          <span class="value">{{ formatCurrency(stats.cashBank.bank) }}</span>
+        </div>
+        <div class="section-stat">
+          <span class="label">Total</span>
+          <span class="value text-primary">{{
+            formatCurrency(stats.cashBank.total)
+          }}</span>
+        </div>
+      </div>
+      <div class="section-footer">
+        <span>Manage →</span>
+      </div>
+    </a>
+  </div>
+  }
+</div>

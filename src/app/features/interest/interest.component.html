@@ -1,0 +1,577 @@
+<app-navbar></app-navbar>
+
+<div class="interest-container" *ngIf="hasAccess">
+  <div class="page-header fade-in">
+    <div>
+      <h1>📈 Interest</h1>
+      <p class="text-muted">Track interest on loans and investments</p>
+      <p class="access-badge">🔒 Restricted Access</p>
+    </div>
+    <button class="btn btn-primary" (click)="openAddPersonModal()">
+      <span>➕</span>
+      Add Person
+    </button>
+  </div>
+
+  <div class="summary-cards">
+    <div class="summary-card glass-card">
+      <div class="summary-icon total">💰</div>
+      <div class="summary-content">
+        <p class="summary-label">Total Interest</p>
+        <p class="summary-value">{{ formatCurrency(getTotalAmount()) }}</p>
+      </div>
+    </div>
+    <div class="summary-card glass-card">
+      <div class="summary-icon completed">✅</div>
+      <div class="summary-content">
+        <p class="summary-label">Received</p>
+        <p class="summary-value text-success">
+          {{ formatCurrency(getTotalReceived()) }}
+        </p>
+      </div>
+    </div>
+    <div class="summary-card glass-card">
+      <div class="summary-icon pending">⏳</div>
+      <div class="summary-content">
+        <p class="summary-label">Pending</p>
+        <p class="summary-value text-warning">
+          {{ formatCurrency(getTotalPending()) }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p class="text-muted">Loading interest records...</p>
+  </div>
+  } @else if (persons.length === 0) {
+  <div class="empty-state glass-card">
+    <div class="empty-icon">📊</div>
+    <h3>No interest records yet</h3>
+    <p class="text-muted">Start by adding a person for interest tracking</p>
+    <button class="btn btn-primary" (click)="openAddPersonModal()">
+      Add First Person
+    </button>
+  </div>
+  } @else {
+  <div class="persons-grid">
+    @for (person of persons; track person._id) {
+    <div class="person-card glass-card slide-in">
+      <div class="person-header">
+        <div class="person-avatar interest">
+          {{ person.name.charAt(0).toUpperCase() }}
+        </div>
+        <div class="person-info">
+          <h3>{{ person.name }}</h3>
+          @if (person.email) {
+          <p class="person-detail">📧 {{ person.email }}</p>
+          } @if (person.phone) {
+          <p class="person-detail">📱 {{ person.phone }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="person-stats">
+        <div class="stat-item">
+          <span class="stat-label">Total Interest</span>
+          <span class="stat-value">{{
+            formatCurrency(person.stats?.total || 0)
+          }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Received</span>
+          <span class="stat-value text-success">{{
+            formatCurrency(person.stats?.completed || 0)
+          }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Pending</span>
+          <span class="stat-value text-warning">{{
+            formatCurrency(person.stats?.pending || 0)
+          }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Transactions</span>
+          <span class="stat-value">{{
+            person.stats?.transactionCount || 0
+          }}</span>
+        </div>
+      </div>
+
+      <div class="person-actions">
+        <button
+          class="btn btn-secondary btn-sm"
+          (click)="viewPersonDetails(person)"
+        >
+          View Details
+        </button>
+        <button
+          class="btn btn-primary btn-sm"
+          (click)="openAddTransactionModal(person)"
+        >
+          Add Interest
+        </button>
+        <button class="btn btn-secondary btn-sm" (click)="generatePDF(person)">
+          📄 PDF
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+  }
+</div>
+
+<!-- Add Person Modal -->
+@if (showAddPersonModal) {
+<div class="modal-backdrop" (click)="closeAddPersonModal()">
+  <div class="modal glass-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add New Person</h2>
+      <button class="close-btn" (click)="closeAddPersonModal()">×</button>
+    </div>
+    <form (ngSubmit)="addPerson()" class="modal-body">
+      <div class="form-group">
+        <label for="personName">Name *</label>
+        <input
+          type="text"
+          id="personName"
+          class="form-control"
+          [(ngModel)]="personForm.name"
+          name="name"
+          placeholder="Enter person's name"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="personEmail">Email (optional)</label>
+        <input
+          type="email"
+          id="personEmail"
+          class="form-control"
+          [(ngModel)]="personForm.email"
+          name="email"
+          placeholder="email@example.com"
+        />
+      </div>
+      <div class="form-group">
+        <label for="personPhone">Phone (optional)</label>
+        <input
+          type="tel"
+          id="personPhone"
+          class="form-control"
+          [(ngModel)]="personForm.phone"
+          name="phone"
+          placeholder="+91 1234567890"
+        />
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeAddPersonModal()"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">Add Person</button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<!-- Add Transaction Modal -->
+@if (showAddTransactionModal && selectedPerson) {
+<div class="modal-backdrop" (click)="closeAddTransactionModal()">
+  <div class="modal glass-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add Interest - {{ selectedPerson.name }}</h2>
+      <button class="close-btn" (click)="closeAddTransactionModal()">×</button>
+    </div>
+    <form (ngSubmit)="addTransaction()" class="modal-body">
+      <div class="form-group">
+        <label for="transactionDate">Date *</label>
+        <input
+          type="date"
+          id="transactionDate"
+          class="form-control"
+          [(ngModel)]="transactionForm.date"
+          name="date"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="principal">Principal Amount (₹)</label>
+        <input
+          type="number"
+          id="principal"
+          class="form-control"
+          [(ngModel)]="transactionForm.principal"
+          name="principal"
+          placeholder="0"
+          min="0"
+          step="0.01"
+          (ngModelChange)="calculateInterest()"
+        />
+      </div>
+      <div class="form-group">
+        <label for="interestRate">Interest Rate (%)</label>
+        <input
+          type="number"
+          id="interestRate"
+          class="form-control"
+          [(ngModel)]="transactionForm.interestRate"
+          name="interestRate"
+          placeholder="0"
+          min="0"
+          max="100"
+          step="0.1"
+          (ngModelChange)="calculateInterest()"
+        />
+      </div>
+      <div class="form-group">
+        <label for="transactionAmount">Interest Amount (₹) *</label>
+        <input
+          type="number"
+          id="transactionAmount"
+          class="form-control"
+          [(ngModel)]="transactionForm.amount"
+          name="amount"
+          placeholder="0"
+          min="1"
+          step="0.01"
+          required
+        />
+        <small class="form-hint"
+          >Calculated automatically or enter manually</small
+        >
+      </div>
+      <div class="form-group">
+        <label for="transactionStatus">Status</label>
+        <select
+          id="transactionStatus"
+          class="form-control"
+          [(ngModel)]="transactionForm.status"
+          name="status"
+        >
+          <option value="completed">Received</option>
+          <option value="pending">Pending</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="transactionRemarks">Remarks</label>
+        <textarea
+          id="transactionRemarks"
+          class="form-control"
+          [(ngModel)]="transactionForm.remarks"
+          name="remarks"
+          rows="3"
+          placeholder="Add notes..."
+        ></textarea>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeAddTransactionModal()"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">Add Interest</button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<!-- Edit Transaction Modal -->
+@if (showEditTransactionModal) {
+<div class="modal-backdrop edit-modal" (click)="closeEditTransactionModal()">
+  <div class="modal glass-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Interest</h2>
+      <button class="close-btn" (click)="closeEditTransactionModal()">×</button>
+    </div>
+    <form (ngSubmit)="updateTransaction()" class="modal-body">
+      <div class="form-group">
+        <label for="editTransactionDate">Date *</label>
+        <input
+          type="date"
+          id="editTransactionDate"
+          class="form-control"
+          [(ngModel)]="transactionForm.date"
+          name="date"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="editPrincipal">Principal Amount (₹)</label>
+        <input
+          type="number"
+          id="editPrincipal"
+          class="form-control"
+          [(ngModel)]="transactionForm.principal"
+          name="principal"
+          placeholder="0"
+          min="0"
+          step="0.01"
+          (ngModelChange)="calculateInterest()"
+        />
+      </div>
+      <div class="form-group">
+        <label for="editInterestRate">Interest Rate (%)</label>
+        <input
+          type="number"
+          id="editInterestRate"
+          class="form-control"
+          [(ngModel)]="transactionForm.interestRate"
+          name="interestRate"
+          placeholder="0"
+          min="0"
+          max="100"
+          step="0.1"
+          (ngModelChange)="calculateInterest()"
+        />
+      </div>
+      <div class="form-group">
+        <label for="editTransactionAmount">Interest Amount (₹) *</label>
+        <input
+          type="number"
+          id="editTransactionAmount"
+          class="form-control"
+          [(ngModel)]="transactionForm.amount"
+          name="amount"
+          placeholder="0"
+          min="1"
+          step="0.01"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="editTransactionStatus">Status</label>
+        <select
+          id="editTransactionStatus"
+          class="form-control"
+          [(ngModel)]="transactionForm.status"
+          name="status"
+        >
+          <option value="completed">Received</option>
+          <option value="pending">Pending</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="editTransactionRemarks">Remarks</label>
+        <textarea
+          id="editTransactionRemarks"
+          class="form-control"
+          [(ngModel)]="transactionForm.remarks"
+          name="remarks"
+          rows="3"
+          placeholder="Add notes..."
+        ></textarea>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeEditTransactionModal()"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">Update Interest</button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<!-- Person Details Modal -->
+@if (showPersonDetailsModal && selectedPerson) {
+<div class="modal-backdrop" (click)="closePersonDetailsModal()">
+  <div class="modal modal-large glass-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2>{{ selectedPerson.name }}</h2>
+        @if (selectedPerson.email || selectedPerson.phone) {
+        <p class="text-muted">
+          @if (selectedPerson.email) {
+          <span>📧 {{ selectedPerson.email }}</span>
+          } @if (selectedPerson.phone) {
+          <span class="ml-2">📱 {{ selectedPerson.phone }}</span>
+          }
+        </p>
+        }
+      </div>
+      <div style="display: flex; gap: 0.5rem; align-items: center">
+        <button
+          class="btn btn-icon"
+          (click)="openEditPersonModal(selectedPerson)"
+          title="Edit Person"
+        >
+          ✏️
+        </button>
+        <button class="close-btn" (click)="closePersonDetailsModal()">×</button>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <div class="detail-summary">
+        <div class="detail-stat">
+          <span class="label">Total Interest</span>
+          <span class="value">{{
+            formatCurrency(selectedPerson.stats?.total || 0)
+          }}</span>
+        </div>
+        <div class="detail-stat">
+          <span class="label">Received</span>
+          <span class="value text-success">{{
+            formatCurrency(selectedPerson.stats?.completed || 0)
+          }}</span>
+        </div>
+        <div class="detail-stat">
+          <span class="label">Pending</span>
+          <span class="value text-warning">{{
+            formatCurrency(selectedPerson.stats?.pending || 0)
+          }}</span>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <button
+          class="btn btn-primary"
+          (click)="openAddTransactionModal(selectedPerson!)"
+        >
+          ➕ Add Interest
+        </button>
+        <button
+          class="btn btn-secondary"
+          (click)="generatePDF(selectedPerson!)"
+        >
+          📄 Export PDF
+        </button>
+        <button
+          class="btn btn-danger"
+          (click)="deletePerson(selectedPerson!._id)"
+        >
+          🗑️ Delete Person
+        </button>
+      </div>
+
+      <div class="transactions-section">
+        <h3>Interest History</h3>
+        @if (transactions.length === 0) {
+        <div class="empty-message">
+          <p class="text-muted">No interest transactions yet</p>
+        </div>
+        } @else {
+        <div class="transactions-list">
+          @for (transaction of transactions; track transaction._id) {
+          <div class="transaction-item glass-card">
+            <div class="transaction-main">
+              <div class="transaction-info">
+                <p class="transaction-amount">
+                  {{ formatCurrency(transaction.amount) }}
+                </p>
+                <p class="transaction-date">
+                  {{ formatDate(transaction.date) }}
+                </p>
+                @if (transaction.metadata?.principal) {
+                <p class="transaction-meta">
+                  Principal:
+                  {{ formatCurrency(transaction.metadata.principal) }} @if
+                  (transaction.metadata?.interestRate) { | Rate:
+                  {{ transaction.metadata.interestRate }}% }
+                </p>
+                }
+              </div>
+              <div class="transaction-actions">
+                <span class="status-badge" [class]="transaction.status">
+                  {{ transaction.status }}
+                </span>
+                <button
+                  class="transaction-edit"
+                  (click)="editTransaction(transaction)"
+                  title="Edit Interest"
+                >
+                  ✏️
+                </button>
+                <button
+                  class="transaction-delete"
+                  (click)="deleteTransaction(transaction._id)"
+                  title="Delete Interest"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+            @if (transaction.remarks) {
+            <p class="transaction-remarks">{{ transaction.remarks }}</p>
+            }
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Edit Person Modal -->
+@if (showEditPersonModal) {
+<div class="modal-backdrop edit-modal" (click)="closeEditPersonModal()">
+  <div class="modal glass-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Person</h2>
+      <button class="close-btn" (click)="closeEditPersonModal()">×</button>
+    </div>
+    <form (ngSubmit)="updatePerson()" class="modal-body">
+      <div class="form-group">
+        <label for="editPersonName">Name *</label>
+        <input
+          type="text"
+          id="editPersonName"
+          class="form-control"
+          [(ngModel)]="personForm.name"
+          name="name"
+          placeholder="Enter name"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="editPersonEmail">Email</label>
+        <input
+          type="email"
+          id="editPersonEmail"
+          class="form-control"
+          [(ngModel)]="personForm.email"
+          name="email"
+          placeholder="Enter email (optional)"
+        />
+      </div>
+      <div class="form-group">
+        <label for="editPersonPhone">Phone</label>
+        <input
+          type="tel"
+          id="editPersonPhone"
+          class="form-control"
+          [(ngModel)]="personForm.phone"
+          name="phone"
+          placeholder="Enter phone (optional)"
+        />
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeEditPersonModal()"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">Update Person</button>
+      </div>
+    </form>
+  </div>
+</div>
+}
