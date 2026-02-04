@@ -2,9 +2,10 @@
   position: sticky;
   top: 0;
   z-index: 1000;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   margin: 1rem 1.5rem 1.25rem 1.5rem;
   border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .navbar-container {
@@ -13,6 +14,10 @@
   gap: 1.5rem;
   max-width: 100%;
   margin: 0;
+}
+
+.hidden {
+  visibility: hidden;
 }
 
 .navbar-brand {
@@ -78,20 +83,17 @@
   background: rgba(99, 102, 241, 0.15);
 }
 
-.nav-link.active::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50%;
-  height: 2px;
-  background: var(--primary);
-  border-radius: 2px;
+.nav-link.active {
+  color: var(--primary);
+  background: rgba(99, 102, 241, 0.15);
+  box-shadow: inset 0 -2px 0 var(--primary);
 }
 
 .nav-icon {
-  font-size: 1.125rem;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  filter: brightness(0.9);
 }
 
 .navbar-user {
@@ -197,6 +199,13 @@
   height: 1px;
   background: var(--border);
   margin: 0.5rem 0;
+}
+
+.brand-logo {
+  max-height: 72px;
+  width: auto;
+  /* object-fit: contain; */
+  margin-right: 10px;
 }
 
 @media (max-width: 1024px) {

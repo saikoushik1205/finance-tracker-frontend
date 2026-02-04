@@ -20,11 +20,12 @@ export class DashboardComponent implements OnInit {
   error = "";
   userName = "";
   hasInterestAccess = false;
+  isLightTheme = false;
 
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -86,5 +87,9 @@ export class DashboardComponent implements OnInit {
     if (!this.stats) return 0;
     // Count people from lending and borrowing sections
     return 0; // This would need to be calculated from the actual data
+  }
+
+  toggleTheme(): void {
+    this.isLightTheme = !this.isLightTheme;
   }
 }

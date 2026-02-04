@@ -171,6 +171,11 @@
   margin: 0;
 }
 
+.light-theme {
+  background-color: #ffffff;
+  color: #111111;
+}
+
 .section-cards-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -262,6 +267,10 @@
 .section-card:hover .section-footer {
   transform: translateX(4px);
   transition: var(--transition);
+}
+
+.nav-icon {
+   filter: invert(1);
 }
 
 @media (max-width: 768px) {

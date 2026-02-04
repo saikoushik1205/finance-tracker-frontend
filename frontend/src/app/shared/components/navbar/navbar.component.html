@@ -2,102 +2,111 @@
   <div class="navbar-container">
     <div class="navbar-brand">
       <a routerLink="/dashboard" class="brand-link">
-        <span class="brand-icon">💰</span>
+        <img
+          src="https://res.cloudinary.com/dw5yhp2vz/image/upload/v1768892480/Gemini_Generated_Image_2i39le2i39le2i39_jzsznr.png"
+          alt="FinTrack Logo"
+          class="brand-logo"
+        />
         <span class="brand-text">FinTrack</span>
       </a>
     </div>
 
     <div class="navbar-menu">
       <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
-        <span class="nav-icon">📊</span>
+        <img
+          src="assets/layout-dashboard.svg"
+          class="nav-icon"
+          alt="Dashboard"
+        />
+
         <span>Dashboard</span>
       </a>
 
       <a routerLink="/lending" routerLinkActive="active" class="nav-link">
-        <span class="nav-icon">💸</span>
+        <img src="assets/hand-coins.svg" class="nav-icon" alt="Lending" />
         <span>Lending</span>
       </a>
 
       <a routerLink="/borrowing" routerLinkActive="active" class="nav-link">
-        <span class="nav-icon">💳</span>
+        <img src="assets/credit-card.svg" class="nav-icon" alt="Borrowing" />
         <span>Borrowing</span>
       </a>
 
       <a routerLink="/earnings" routerLinkActive="active" class="nav-link">
-        <span class="nav-icon">💵</span>
+        <img src="assets/banknote.svg" class="nav-icon" alt="Earnings" />
         <span>Earnings</span>
       </a>
 
       <a routerLink="/expenses" routerLinkActive="active" class="nav-link">
-        <span class="nav-icon">🧾</span>
+        <img src="assets/receipt.svg" class="nav-icon" alt="Expenses" />
         <span>Expenses</span>
       </a>
 
       @if (hasInterestAccess) {
-      <a routerLink="/interest" routerLinkActive="active" class="nav-link">
-        <span class="nav-icon">📈</span>
-        <span>Interest</span>
-      </a>
+        <a routerLink="/interest" routerLinkActive="active" class="nav-link">
+          <img src="assets/trending-up.svg" class="nav-icon" alt="Interest" />
+          <span>Interest</span>
+        </a>
       }
 
       <a routerLink="/other" routerLinkActive="active" class="nav-link">
-        <span class="nav-icon">🏦</span>
+        <img src="assets/landmark.svg" class="nav-icon" alt="Cash & Bank" />
         <span>Cash & Bank</span>
       </a>
     </div>
 
     @if (currentUser) {
-    <div class="navbar-user">
-      <button class="user-button" (click)="toggleUserMenu()">
-        @if (currentUser.photoURL) {
-        <img
-          [src]="currentUser.photoURL"
-          [alt]="currentUser.displayName"
-          class="user-avatar"
-        />
-        } @else {
-        <div class="user-avatar-placeholder">
-          {{
-            currentUser.displayName.charAt(0) ||
-              currentUser.email.charAt(0) ||
-              "U"
-          }}
-        </div>
-        }
-        <span class="user-name">{{
-          currentUser.displayName || currentUser.email
-        }}</span>
-        <svg
-          class="chevron"
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-        >
-          <path
-            d="M4.427 6.573l3.396 3.396 3.396-3.396a.75.75 0 111.06 1.06l-3.925 3.926a.75.75 0 01-1.061 0L3.367 7.633a.75.75 0 011.06-1.06z"
-          />
-        </svg>
-      </button>
-
-      @if (showUserMenu) {
-      <div class="user-menu glass-card">
-        <a
-          routerLink="/profile"
-          class="menu-item"
-          (click)="showUserMenu = false"
-        >
-          <span class="menu-icon">👤</span>
-          <span>Profile</span>
-        </a>
-        <div class="menu-divider"></div>
-        <button class="menu-item logout" (click)="logout()">
-          <span class="menu-icon">🚪</span>
-          <span>Logout</span>
+      <div class="navbar-user">
+        <button class="user-button" (click)="toggleUserMenu()">
+          @if (currentUser.photoURL) {
+            <img
+              [src]="currentUser.photoURL"
+              [alt]="currentUser.displayName"
+              class="user-avatar"
+            />
+          } @else {
+            <div class="user-avatar-placeholder">
+              {{
+                currentUser.displayName.charAt(0) ||
+                  currentUser.email.charAt(0) ||
+                  "U"
+              }}
+            </div>
+          }
+          <span class="user-name">{{
+            currentUser.displayName || currentUser.email
+          }}</span>
+          <svg
+            class="chevron"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+          >
+            <path
+              d="M4.427 6.573l3.396 3.396 3.396-3.396a.75.75 0 111.06 1.06l-3.925 3.926a.75.75 0 01-1.061 0L3.367 7.633a.75.75 0 011.06-1.06z"
+            />
+          </svg>
         </button>
+
+        @if (showUserMenu) {
+          <div class="user-menu glass-card">
+            <a
+              routerLink="/profile"
+              class="menu-item"
+              (click)="showUserMenu = false"
+            >
+              <span class="menu-icon">👤</span>
+              <span>Profile</span>
+            </a>
+            <div class="menu-divider"></div>
+            <button class="menu-item logout" (click)="logout()">
+              <span class="menu-icon">🚪</span>
+              <span>Logout</span>
+            </button>
+          </div>
+        }
       </div>
-      }
-    </div>
     }
   </div>
 </nav>

@@ -1,9 +1,4 @@
-/* ========================================
-   FINTRACK - GLOBAL STYLES
-   Premium Dark Fintech Theme
-   ======================================== */
 
-/* Premium Font Import - Inter (Lightweight) */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 /* CSS Reset & Base */
@@ -14,11 +9,7 @@
 }
 
 :root {
-  /* ============================================
-     PREMIUM COLOR SYSTEM - Fintech Grade
-     ============================================ */
-
-  /* Primary Accent - Refined Indigo */
+ 
   --primary: #6366f1;
   --primary-dark: #4f46e5;
   --primary-light: #818cf8;

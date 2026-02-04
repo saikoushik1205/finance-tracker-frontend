@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable, BehaviorSubject, throwError } from "rxjs";
+import * as jwt_decode from "jwt-decode";
 import { tap, catchError } from "rxjs/operators";
 import { Router } from "@angular/router";
 import { environment } from "../../../environments/environment";
@@ -16,7 +17,12 @@ export class AuthService {
   private tokenSubject = new BehaviorSubject<string | null>(null);
   public token$ = this.tokenSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {
+  private tokenExpiryTimeout: any = null;
+
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+  ) {
     // Load token and user from localStorage on init
     this.loadStoredAuth();
   }
@@ -24,12 +30,12 @@ export class AuthService {
   private loadStoredAuth(): void {
     const token = localStorage.getItem("auth_token");
     const userStr = localStorage.getItem("user");
-
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr);
         this.tokenSubject.next(token);
         this.currentUserSubject.next(user);
+        this.setTokenExpiryLogout(token);
       } catch (error) {
         console.error("Error loading stored auth:", error);
         this.clearAuth();
@@ -42,6 +48,7 @@ export class AuthService {
     localStorage.setItem("user", JSON.stringify(user));
     this.tokenSubject.next(token);
     this.currentUserSubject.next(user);
+    this.setTokenExpiryLogout(token);
   }
 
   private clearAuth(): void {
@@ -49,6 +56,10 @@ export class AuthService {
     localStorage.removeItem("user");
     this.tokenSubject.next(null);
     this.currentUserSubject.next(null);
+    if (this.tokenExpiryTimeout) {
+      clearTimeout(this.tokenExpiryTimeout);
+      this.tokenExpiryTimeout = null;
+    }
   }
 
   async loginWithEmail(email: string, password: string): Promise<void> {
@@ -69,10 +80,39 @@ export class AuthService {
     }
   }
 
+  /**
+   * Sets a timer to automatically logout when the JWT expires
+   */
+  private setTokenExpiryLogout(token: string): void {
+    try {
+      const decoded: any = (jwt_decode as any).default(token);
+      if (decoded && decoded.exp) {
+        const expiry = decoded.exp * 1000; // exp is in seconds
+        const now = Date.now();
+        const timeout = expiry - now;
+        if (timeout > 0) {
+          if (this.tokenExpiryTimeout) {
+            clearTimeout(this.tokenExpiryTimeout);
+          }
+          this.tokenExpiryTimeout = setTimeout(() => {
+            this.logout();
+            alert("Session expired. Please login again.");
+          }, timeout);
+        } else {
+          // Token already expired
+          this.logout();
+        }
+      }
+    } catch (e) {
+      // If decode fails, force logout
+      this.logout();
+    }
+  }
+
   async registerWithEmail(
     email: string,
     password: string,
-    displayName: string
+    displayName: string,
   ): Promise<void> {
     try {
       const response = await this.http
@@ -92,7 +132,7 @@ export class AuthService {
     } catch (error: any) {
       console.error("Registration error:", error);
       throw new Error(
-        error.error?.message || error.message || "Registration failed"
+        error.error?.message || error.message || "Registration failed",
       );
     }
   }

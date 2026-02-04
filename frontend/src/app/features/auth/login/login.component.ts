@@ -17,14 +17,20 @@ export class LoginComponent {
   loading = false;
   error = "";
 
-  constructor(private authService: AuthService, private router: Router) {
-    // Redirect if already logged in
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+  ) {}
+
+  ngOnInit(): void {
     if (this.authService.isAuthenticated()) {
       this.router.navigate(["/dashboard"]);
     }
   }
 
   async loginWithEmail(): Promise<void> {
+    if (this.loading) return; // ✅ HARD STOP
+
     if (!this.email || !this.password) {
       this.error = "Please enter email and password";
       return;
