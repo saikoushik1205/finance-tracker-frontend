@@ -33,12 +33,15 @@
         <span>Expenses</span>
       </a>
 
-      @if (hasInterestAccess) {
-      <a routerLink="/interest" routerLinkActive="active" class="nav-link">
+      <a
+        routerLink="/interest"
+        routerLinkActive="active"
+        class="nav-link"
+        [class.hidden]="!hasInterestAccess"
+      >
         <span class="nav-icon">📈</span>
         <span>Interest</span>
       </a>
-      }
 
       <a routerLink="/other" routerLinkActive="active" class="nav-link">
         <span class="nav-icon">🏦</span>
@@ -47,57 +50,57 @@
     </div>
 
     @if (currentUser) {
-    <div class="navbar-user">
-      <button class="user-button" (click)="toggleUserMenu()">
-        @if (currentUser.photoURL) {
-        <img
-          [src]="currentUser.photoURL"
-          [alt]="currentUser.displayName"
-          class="user-avatar"
-        />
-        } @else {
-        <div class="user-avatar-placeholder">
-          {{
-            currentUser.displayName.charAt(0) ||
-              currentUser.email.charAt(0) ||
-              "U"
-          }}
-        </div>
-        }
-        <span class="user-name">{{
-          currentUser.displayName || currentUser.email
-        }}</span>
-        <svg
-          class="chevron"
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-        >
-          <path
-            d="M4.427 6.573l3.396 3.396 3.396-3.396a.75.75 0 111.06 1.06l-3.925 3.926a.75.75 0 01-1.061 0L3.367 7.633a.75.75 0 011.06-1.06z"
-          />
-        </svg>
-      </button>
-
-      @if (showUserMenu) {
-      <div class="user-menu glass-card">
-        <a
-          routerLink="/profile"
-          class="menu-item"
-          (click)="showUserMenu = false"
-        >
-          <span class="menu-icon">👤</span>
-          <span>Profile</span>
-        </a>
-        <div class="menu-divider"></div>
-        <button class="menu-item logout" (click)="logout()">
-          <span class="menu-icon">🚪</span>
-          <span>Logout</span>
+      <div class="navbar-user">
+        <button class="user-button" (click)="toggleUserMenu()">
+          @if (currentUser.photoURL) {
+            <img
+              [src]="currentUser.photoURL"
+              [alt]="currentUser.displayName"
+              class="user-avatar"
+            />
+          } @else {
+            <div class="user-avatar-placeholder">
+              {{
+                currentUser.displayName.charAt(0) ||
+                  currentUser.email.charAt(0) ||
+                  "U"
+              }}
+            </div>
+          }
+          <span class="user-name">{{
+            currentUser.displayName || currentUser.email
+          }}</span>
+          <svg
+            class="chevron"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+          >
+            <path
+              d="M4.427 6.573l3.396 3.396 3.396-3.396a.75.75 0 111.06 1.06l-3.925 3.926a.75.75 0 01-1.061 0L3.367 7.633a.75.75 0 011.06-1.06z"
+            />
+          </svg>
         </button>
+
+        @if (showUserMenu) {
+          <div class="user-menu glass-card">
+            <a
+              routerLink="/profile"
+              class="menu-item"
+              (click)="showUserMenu = false"
+            >
+              <span class="menu-icon">👤</span>
+              <span>Profile</span>
+            </a>
+            <div class="menu-divider"></div>
+            <button class="menu-item logout" (click)="logout()">
+              <span class="menu-icon">🚪</span>
+              <span>Logout</span>
+            </button>
+          </div>
+        }
       </div>
-      }
-    </div>
     }
   </div>
 </nav>
