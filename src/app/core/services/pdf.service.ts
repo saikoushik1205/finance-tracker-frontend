@@ -12,7 +12,7 @@ export class PdfService {
     transactions: Transaction[],
     sectionType: string,
     userName: string,
-    userEmail: string
+    userEmail: string,
   ): void {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -54,6 +54,54 @@ export class PdfService {
       yPos += 6;
     }
     yPos += 8;
+
+    // Calculate Summary
+    const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
+    const completedAmount = transactions
+      .filter((t) => t.status === "completed")
+      .reduce((sum, t) => sum + t.amount, 0);
+    const pendingAmount = transactions
+      .filter((t) => t.status === "pending")
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    // Summary Section
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(79, 70, 229);
+    doc.text("Summary", 20, yPos);
+    yPos += 8;
+
+    // Summary Box
+    doc.setFillColor(245, 245, 250);
+    doc.rect(20, yPos - 5, pageWidth - 40, 25, "F");
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0, 0, 0);
+
+    // Total Amount
+    doc.text("Total Amount:", 25, yPos);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Rs. ${totalAmount.toLocaleString("en-IN")}`, 70, yPos);
+
+    // Completed Amount
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0, 128, 0); // Green color
+    doc.text("Completed:", 25, yPos + 7);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Rs. ${completedAmount.toLocaleString("en-IN")}`, 70, yPos + 7);
+
+    // Pending Amount
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(255, 140, 0); // Orange color
+    doc.text("Pending:", 25, yPos + 14);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Rs. ${pendingAmount.toLocaleString("en-IN")}`, 70, yPos + 14);
+
+    yPos += 30;
+
+    // Reset text color
+    doc.setTextColor(0, 0, 0);
 
     // Transactions Table
     if (transactions.length > 0) {
@@ -105,13 +153,13 @@ export class PdfService {
       `Generated on: ${new Date().toLocaleString("en-IN")}`,
       pageWidth / 2,
       pageHeight - 10,
-      { align: "center" }
+      { align: "center" },
     );
 
     // Save PDF
     const filename = `FinTrack_${sectionType}_${person.name.replace(
       /\s+/g,
-      "_"
+      "_",
     )}_${Date.now()}.pdf`;
     doc.save(filename);
   }
