@@ -1,11 +1,12 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
+import { firstValueFrom } from "rxjs";
 import { NavbarComponent } from "../../shared/components/navbar/navbar.component";
 import { ApiService } from "../../core/services/api.service";
 import { AuthService } from "../../core/services/auth.service";
 import { PdfService } from "../../core/services/pdf.service";
-import { BalanceAccount } from "../../models/app.models";
+import { BalanceAccount, CashBank } from "../../models/app.models";
 
 type AccountGroupKey = "amazonPayAccounts" | "bankAccounts" | "tideAccounts";
 
@@ -77,6 +78,8 @@ export class OtherComponent implements OnInit {
     bankAccounts: null,
     tideAccounts: null,
   };
+  private saveQueue: Promise<void> = Promise.resolve();
+  private saveRequestId = 0;
 
   editDraft: Record<AccountGroupKey, BalanceAccount> = {
     amazonPayAccounts: { name: "", balance: 0 },
@@ -205,32 +208,52 @@ export class OtherComponent implements OnInit {
   }
 
   saveGroup(key: AccountGroupKey): void {
+    const payload: Partial<CashBank> = {
+      amazonPayAccounts: this.cloneAccounts(this.amazonPayAccounts),
+      bankAccounts: this.cloneAccounts(this.bankAccounts),
+      tideAccounts: this.cloneAccounts(this.tideAccounts),
+    };
+    const requestId = ++this.saveRequestId;
+
     this.savingKey = key;
-    this.apiService
-      .updateCashBank({
-        amazonPayAccounts: this.cloneAccounts(this.amazonPayAccounts),
-        bankAccounts: this.cloneAccounts(this.bankAccounts),
-        tideAccounts: this.cloneAccounts(this.tideAccounts),
-      })
-      .subscribe({
-        next: (response: any) => {
-          if (response.success && response.data) {
-            this.amazonPayAccounts = this.cloneAccounts(
-              response.data.amazonPayAccounts,
-            );
-            this.bankAccounts = this.cloneAccounts(response.data.bankAccounts);
-            this.tideAccounts = this.cloneAccounts(response.data.tideAccounts);
-            this.lastUpdated = response.data.updatedAt || new Date();
-          }
-          this.savingKey = null;
-        },
-        error: (error) => {
-          console.error("Update other balances error:", error);
-          alert("Failed to update balances");
-          this.savingKey = null;
-          this.loadBalances();
-        },
+    this.saveQueue = this.saveQueue
+      .then(() => this.performSave(payload, requestId))
+      .catch((error) => {
+        console.error("Queued other balances save failed:", error);
       });
+  }
+
+  private async performSave(
+    payload: Partial<CashBank>,
+    requestId: number,
+  ): Promise<void> {
+    try {
+      const response: any = await firstValueFrom(
+        this.apiService.updateCashBank(payload),
+      );
+
+      if (response.success && response.data) {
+        // Only apply the response if this is still the latest save request.
+        if (requestId === this.saveRequestId) {
+          this.amazonPayAccounts = this.cloneAccounts(
+            response.data.amazonPayAccounts,
+          );
+          this.bankAccounts = this.cloneAccounts(response.data.bankAccounts);
+          this.tideAccounts = this.cloneAccounts(response.data.tideAccounts);
+          this.lastUpdated = response.data.updatedAt || new Date();
+        }
+      }
+    } catch (error) {
+      if (requestId === this.saveRequestId) {
+        console.error("Update other balances error:", error);
+        alert("Failed to update balances");
+        this.loadBalances();
+      }
+    } finally {
+      if (requestId === this.saveRequestId) {
+        this.savingKey = null;
+      }
+    }
   }
 
   getAccounts(key: AccountGroupKey): BalanceAccount[] {
