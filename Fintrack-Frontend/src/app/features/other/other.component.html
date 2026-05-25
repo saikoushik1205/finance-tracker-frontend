@@ -147,10 +147,33 @@
         <div class="as-accounts">
           @if (amazonPayAccounts.length) {
             @for (account of amazonPayAccounts; track account._id || $index) {
-              <div class="account-row">
-                <div class="account-name">{{ account.name }}</div>
-                <div class="account-bal">
-                  {{ formatCurrency(account.balance) }}
+              <div class="account-row editable-row">
+                <input
+                  class="form-input row-name"
+                  [(ngModel)]="account.name"
+                  placeholder="Account name"
+                />
+                <input
+                  class="form-input row-balance"
+                  type="number"
+                  [(ngModel)]="account.balance"
+                  placeholder="0"
+                />
+                <div class="row-actions">
+                  <button
+                    class="btn-row update"
+                    type="button"
+                    (click)="updateAccount(groups[0])"
+                  >
+                    Update
+                  </button>
+                  <button
+                    class="btn-row delete"
+                    type="button"
+                    (click)="deleteAccount(groups[0], $index)"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             }
@@ -209,10 +232,33 @@
         <div class="as-accounts">
           @if (bankAccounts.length) {
             @for (account of bankAccounts; track account._id || $index) {
-              <div class="account-row">
-                <div class="account-name">{{ account.name }}</div>
-                <div class="account-bal">
-                  {{ formatCurrency(account.balance) }}
+              <div class="account-row editable-row">
+                <input
+                  class="form-input row-name"
+                  [(ngModel)]="account.name"
+                  placeholder="Account name"
+                />
+                <input
+                  class="form-input row-balance"
+                  type="number"
+                  [(ngModel)]="account.balance"
+                  placeholder="0"
+                />
+                <div class="row-actions">
+                  <button
+                    class="btn-row update"
+                    type="button"
+                    (click)="updateAccount(groups[1])"
+                  >
+                    Update
+                  </button>
+                  <button
+                    class="btn-row delete"
+                    type="button"
+                    (click)="deleteAccount(groups[1], $index)"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             }
@@ -271,10 +317,33 @@
         <div class="as-accounts">
           @if (tideAccounts.length) {
             @for (account of tideAccounts; track account._id || $index) {
-              <div class="account-row">
-                <div class="account-name">{{ account.name }}</div>
-                <div class="account-bal">
-                  {{ formatCurrency(account.balance) }}
+              <div class="account-row editable-row">
+                <input
+                  class="form-input row-name"
+                  [(ngModel)]="account.name"
+                  placeholder="Account name"
+                />
+                <input
+                  class="form-input row-balance"
+                  type="number"
+                  [(ngModel)]="account.balance"
+                  placeholder="0"
+                />
+                <div class="row-actions">
+                  <button
+                    class="btn-row update"
+                    type="button"
+                    (click)="updateAccount(groups[2])"
+                  >
+                    Update
+                  </button>
+                  <button
+                    class="btn-row delete"
+                    type="button"
+                    (click)="deleteAccount(groups[2], $index)"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             }
