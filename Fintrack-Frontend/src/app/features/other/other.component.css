@@ -386,6 +386,43 @@
   min-width: 72px;
 }
 
+/* Mobile improvements: stack inputs and emphasize Add button */
+@media (max-width: 640px) {
+  .account-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .account-row .form-control {
+    min-height: 48px;
+    margin-bottom: 0.6rem;
+  }
+
+  .add-account {
+    padding-top: 1rem;
+  }
+
+  .add-button {
+    width: 100%;
+    min-width: 0;
+    padding: 0.85rem 1rem;
+    font-size: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(66,153,225,0.18);
+    background: linear-gradient(90deg,#36b1ff,#3b82f6);
+    color: #fff;
+    display: block;
+  }
+
+  .btn {
+    font-weight: 800;
+  }
+
+  .group-total {
+    padding: 0.9rem;
+  }
+}
+
 .glass-card {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
