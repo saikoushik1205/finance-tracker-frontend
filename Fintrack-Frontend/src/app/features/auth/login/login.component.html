@@ -1,0 +1,66 @@
+<div class="auth-container">
+  <div class="auth-card glass-card fade-in">
+    <div class="auth-header">
+      <h1 class="logo-text">💰 FinTrack</h1>
+      <p class="subtitle">Advanced Personal Financial Tracker</p>
+    </div>
+
+    <div class="auth-body">
+      <h2>Welcome Back</h2>
+      <p class="text-muted">Sign in to continue to your account</p>
+
+      @if (error) {
+      <div class="error-message">
+        {{ error }}
+      </div>
+      }
+
+      <form (ngSubmit)="loginWithEmail()" class="auth-form">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            class="form-control"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+            [disabled]="loading"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            class="form-control"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="Enter your password"
+            required
+            [disabled]="loading"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary btn-block"
+          [disabled]="loading"
+        >
+          @if (loading) {
+          <span class="spinner-small"></span>
+          Signing in... } @else { Sign In }
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>
+          Don't have an account?
+          <a routerLink="/auth/register" class="link">Sign Up</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

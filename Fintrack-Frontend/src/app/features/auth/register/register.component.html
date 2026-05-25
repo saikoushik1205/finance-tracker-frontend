@@ -1,0 +1,94 @@
+<div class="auth-container">
+  <div class="auth-card glass-card fade-in">
+    <div class="auth-header">
+      <h1 class="logo-text">💰 FinTrack</h1>
+      <p class="subtitle">Advanced Personal Financial Tracker</p>
+    </div>
+
+    <div class="auth-body">
+      <h2>Create Account</h2>
+      <p class="text-muted">Sign up to start tracking your finances</p>
+
+      @if (error) {
+      <div class="error-message">
+        {{ error }}
+      </div>
+      }
+
+      <form (ngSubmit)="registerWithEmail()" class="auth-form">
+        <div class="form-group">
+          <label for="displayName">Full Name</label>
+          <input
+            type="text"
+            id="displayName"
+            class="form-control"
+            [(ngModel)]="displayName"
+            name="displayName"
+            placeholder="John Doe"
+            required
+            [disabled]="loading"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            class="form-control"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+            [disabled]="loading"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            class="form-control"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="At least 6 characters"
+            required
+            [disabled]="loading"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            class="form-control"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            placeholder="Re-enter your password"
+            required
+            [disabled]="loading"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary btn-block"
+          [disabled]="loading"
+        >
+          @if (loading) {
+          <span class="spinner-small"></span>
+          Creating account... } @else { Create Account }
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>
+          Already have an account?
+          <a routerLink="/auth/login" class="link">Sign In</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

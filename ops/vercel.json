@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "Fintrack-Backend/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "Fintrack-Backend/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "Fintrack-Frontend/dist/fintrack-frontend/browser/$1"
+    },
+    {
+      "src": "/",
+      "dest": "Fintrack-Frontend/dist/fintrack-frontend/browser/index.html"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/((?!api).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
