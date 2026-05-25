@@ -477,6 +477,90 @@
 
 @keyframes spin {
   to {
+
+@media (max-width: 640px) {
+  .page {
+    padding: 18px 14px 44px;
+  }
+
+  .page-header {
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .page-header,
+  .balance-hero,
+  .accounts-grid,
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .balance-hero {
+    padding: 20px 16px;
+    gap: 20px;
+  }
+
+  .balance-amount {
+    font-size: 34px;
+    word-break: break-word;
+  }
+
+  .breakdown-item {
+    flex-wrap: wrap;
+  }
+
+  .breakdown-name {
+    width: 100%;
+  }
+
+  .breakdown-pct {
+    width: auto;
+  }
+
+  .account-section {
+    border-radius: 16px;
+  }
+
+  .as-header,
+  .as-total-row,
+  .as-accounts,
+  .as-form {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .form-group {
+    width: 100%;
+  }
+
+  .form-input.sm {
+    width: 100%;
+  }
+
+  .btn-add {
+    width: 100%;
+    min-height: 48px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  .btn-add.amz,
+  .btn-add.bank,
+  .btn-add.tide {
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  }
+
+  .empty-state {
+    padding: 1rem 0.85rem;
+    font-size: 0.95rem;
+  }
+}
     transform: rotate(360deg);
   }
 }
