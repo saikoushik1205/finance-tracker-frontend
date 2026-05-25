@@ -242,6 +242,8 @@ export class InterestComponent implements OnInit {
       return;
     }
 
+    const currentPerson = this.selectedPerson;
+
     const transactionData = {
       personId: this.selectedPerson._id,
       date: new Date(this.transactionForm.date),
@@ -258,10 +260,10 @@ export class InterestComponent implements OnInit {
       next: (response: any) => {
         if (response.success) {
           this.loadPersons();
-          this.closeAddTransactionModal();
-          if (this.showPersonDetailsModal && this.selectedPerson) {
-            this.loadPersonTransactions(this.selectedPerson._id);
+          if (this.showPersonDetailsModal && currentPerson) {
+            this.loadPersonTransactions(currentPerson._id);
           }
+          this.closeAddTransactionModal();
         }
       },
       error: (error) => {
