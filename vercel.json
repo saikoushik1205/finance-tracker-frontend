@@ -25,5 +25,5 @@
       "destination": "/index.html"
     }
   ],
-  "outputDirectory": "Fintrack-Frontend/dist/fintrack-frontend"
+  "outputDirectory": "Fintrack-Frontend/dist/fintrack-frontend/browser"
 }
