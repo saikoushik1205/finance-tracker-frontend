@@ -99,10 +99,6 @@ export class OtherComponent implements OnInit {
           this.bankAccounts = this.cloneAccounts(data.bankAccounts);
           this.tideAccounts = this.cloneAccounts(data.tideAccounts);
 
-          if (!this.bankAccounts.length && data.bank > 0) {
-            this.bankAccounts = [{ name: "Bank Account", balance: data.bank }];
-          }
-
           this.lastUpdated = data.updatedAt || null;
         }
         this.loading = false;

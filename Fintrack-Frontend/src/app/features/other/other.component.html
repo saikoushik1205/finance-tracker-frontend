@@ -17,6 +17,9 @@
       <div class="meta">
         <div class="meta-email">{{ userEmail }}</div>
         <div class="meta-time">Last updated: {{ formatDate(lastUpdated) }}</div>
+        <button class="btn-export-all" type="button" (click)="exportAllAsPDF()">
+          Export PDF
+        </button>
       </div>
     </div>
 
@@ -131,6 +134,9 @@
             <div class="as-title">{{ groups[0].title }}</div>
             <div class="as-desc">{{ groups[0].subtitle }}</div>
           </div>
+          <button class="btn-export" type="button" (click)="exportGroupAsPDF(groups[0].key)">
+            Export
+          </button>
         </div>
         <div class="as-total-row">
           <span class="as-total-label">Total</span>
@@ -190,6 +196,9 @@
             <div class="as-title">{{ groups[1].title }}</div>
             <div class="as-desc">{{ groups[1].subtitle }}</div>
           </div>
+          <button class="btn-export" type="button" (click)="exportGroupAsPDF(groups[1].key)">
+            Export
+          </button>
         </div>
         <div class="as-total-row">
           <span class="as-total-label">Total</span>
@@ -249,6 +258,9 @@
             <div class="as-title">{{ groups[2].title }}</div>
             <div class="as-desc">{{ groups[2].subtitle }}</div>
           </div>
+          <button class="btn-export" type="button" (click)="exportGroupAsPDF(groups[2].key)">
+            Export
+          </button>
         </div>
         <div class="as-total-row">
           <span class="as-total-label">Total</span>

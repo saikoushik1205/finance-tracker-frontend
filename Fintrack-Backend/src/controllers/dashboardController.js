@@ -70,8 +70,7 @@ exports.getDashboardStats = async (req, res) => {
       accounts.reduce((sum, account) => sum + (account.balance || 0), 0);
 
     const amazonPayTotal = accountTotal(cashBank?.amazonPayAccounts || []);
-    const bankTotal =
-      accountTotal(cashBank?.bankAccounts || []) || cashBank?.bank || 0;
+    const bankTotal = accountTotal(cashBank?.bankAccounts || []);
     const tideTotal = accountTotal(cashBank?.tideAccounts || []);
     const totalCash = amazonPayTotal + bankTotal + tideTotal;
 

@@ -173,6 +173,19 @@ export class PdfService {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     let yPos = 20;
+    const overallTotal = groups.reduce(
+      (sum, group) =>
+        sum +
+        group.accounts.reduce(
+          (groupSum, account) => groupSum + (Number(account.balance) || 0),
+          0,
+        ),
+      0,
+    );
+    const totalAccounts = groups.reduce(
+      (sum, group) => sum + group.accounts.length,
+      0,
+    );
 
     // Header
     doc.setFontSize(22);
@@ -206,21 +219,42 @@ export class PdfService {
       yPos += 8;
     }
 
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Overall Total: Rs. ${overallTotal.toLocaleString("en-IN")}`, 20, yPos);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Accounts: ${totalAccounts}`, pageWidth - 20, yPos, { align: "right" });
+    yPos += 10;
+
     // For each group, render a small table
     groups.forEach((g, idx) => {
+      const groupTotal = g.accounts.reduce(
+        (sum, account) => sum + (Number(account.balance) || 0),
+        0,
+      );
       doc.setFontSize(12);
       doc.setTextColor(79, 70, 229);
       doc.text(g.title, 20, yPos);
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(
+        `Total: Rs. ${groupTotal.toLocaleString("en-IN")}`,
+        pageWidth - 20,
+        yPos,
+        { align: "right" },
+      );
       yPos += 6;
 
-      const tableBody = g.accounts.map((a) => [
+      const tableBody = g.accounts.map((a, index) => [
+        String(index + 1),
         a.name || "-",
         `Rs. ${Number(a.balance || 0).toLocaleString("en-IN")}`,
       ]);
 
       autoTable(doc, {
         startY: yPos,
-        head: [["Account", "Balance"]],
+        head: [["No.", "Account Name", "Amount"]],
         body: tableBody,
         theme: "grid",
         headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255] },

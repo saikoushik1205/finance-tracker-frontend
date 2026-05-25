@@ -16,7 +16,7 @@ const buildResponseData = (cashBank) => {
   const bankAccounts = cashBank.bankAccounts || [];
   const tideAccounts = cashBank.tideAccounts || [];
   const amazonPay = getAccountTotal(amazonPayAccounts);
-  const bank = getAccountTotal(bankAccounts) || cashBank.bank || 0;
+  const bank = getAccountTotal(bankAccounts);
   const tide = getAccountTotal(tideAccounts);
   const total = amazonPay + bank + tide;
 
