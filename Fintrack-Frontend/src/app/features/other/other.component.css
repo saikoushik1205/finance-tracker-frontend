@@ -922,6 +922,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 28px; /* increased gap to avoid overlap */
   margin-bottom: 28px;
+  align-items: start;
 }
 .account-section {
   background: var(--card);
@@ -930,6 +931,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .editable-row {
@@ -1224,9 +1226,9 @@
     box-shadow 0.18s;
 }
 .account-section:hover {
-  transform: translateY(-6px); /* reduce lift to prevent overlap */
-  z-index: 2; /* ensure hovered card appears above neighbors */
-  box-shadow: 0 14px 36px rgba(2, 6, 23, 0.4);
+  transform: none; /* avoid visual overlap between cards */
+  z-index: 1;
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.28);
 }
 .as-icon {
   width: 52px;
