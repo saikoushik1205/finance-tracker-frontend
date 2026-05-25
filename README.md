@@ -29,3 +29,14 @@ ng serve
 ```
 
 App will be available at: http://localhost:4200
+
+--
+
+Project layout notes:
+
+- `src/` - application source code (keep here)
+- `dist/` - built output
+- `docs/` - auxiliary documentation (BEST_PRACTICES.md, vercel.json)
+- `scripts/` - deployment helpers (deploy.sh, deploy.bat)
+
+Keep `angular.json`, `package.json`, and `tsconfig.*` at the project root so the Angular CLI and build tools continue to work without modification.
