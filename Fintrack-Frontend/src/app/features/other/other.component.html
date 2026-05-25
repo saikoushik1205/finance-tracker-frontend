@@ -17,16 +17,14 @@
       <div class="meta">
         <div class="meta-email">{{ userEmail }}</div>
         <div class="meta-time">Last updated: {{ formatDate(lastUpdated) }}</div>
-        <button class="btn-export-all" type="button" (click)="exportAllAsPDF()">
-          <span class="btn-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-              <path d="M14 2v6h6" />
-              <path d="M9 13h6" />
-              <path d="M9 17h6" />
-            </svg>
-          </span>
-          PDF
+        <button
+          class="btn-export-all"
+          type="button"
+          (click)="exportAllAsPDF()"
+          title="Export all as PDF"
+          aria-label="Export all as PDF"
+        >
+          <span class="btn-icon" aria-hidden="true">📄</span>
         </button>
       </div>
     </div>
@@ -142,14 +140,14 @@
             <div class="as-title">{{ groups[0].title }}</div>
             <div class="as-desc">{{ groups[0].subtitle }}</div>
           </div>
-          <button class="btn-export" type="button" (click)="exportGroupAsPDF(groups[0].key)">
-            <span class="btn-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-                <path d="M14 2v6h6" />
-              </svg>
-            </span>
-            PDF
+          <button
+            class="btn-export"
+            type="button"
+            (click)="exportGroupAsPDF(groups[0].key)"
+            title="Export Amazon Pay as PDF"
+            aria-label="Export Amazon Pay as PDF"
+          >
+            <span class="btn-icon" aria-hidden="true">📄</span>
           </button>
         </div>
         <div class="as-total-row">
@@ -162,48 +160,60 @@
           @if (amazonPayAccounts.length) {
             @for (account of amazonPayAccounts; track account._id || $index) {
               <div class="account-row editable-row">
-                <input
-                  class="form-input row-name"
-                  [(ngModel)]="account.name"
-                  placeholder="Account name"
-                />
-                <input
-                  class="form-input row-balance"
-                  type="number"
-                  [(ngModel)]="account.balance"
-                  placeholder="0"
-                />
-                <div class="row-actions">
-                  <button
-                    class="btn-row update"
-                    type="button"
-                    (click)="updateAccount(groups[0])"
-                    aria-label="Update account"
-                  >
-                    <span class="btn-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                      </svg>
-                    </span>
-                  </button>
-                  <button
-                    class="btn-row delete"
-                    type="button"
-                    (click)="deleteAccount(groups[0], $index)"
-                    aria-label="Delete account"
-                  >
-                    <span class="btn-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18" />
-                        <path d="M8 6V4h8v2" />
-                        <path d="M19 6l-1 14H6L5 6" />
-                        <path d="M10 11v6" />
-                        <path d="M14 11v6" />
-                      </svg>
-                    </span>
-                  </button>
-                </div>
+                @if (editingIndex.amazonPayAccounts === $index) {
+                  <input
+                    class="form-input row-name"
+                    [(ngModel)]="editDraft.amazonPayAccounts.name"
+                    placeholder="Account name"
+                  />
+                  <input
+                    class="form-input row-balance"
+                    type="number"
+                    [(ngModel)]="editDraft.amazonPayAccounts.balance"
+                    placeholder="0"
+                  />
+                  <div class="row-actions">
+                    <button
+                      class="btn-row update"
+                      type="button"
+                      (click)="saveEdit(groups[0])"
+                      title="Save"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      class="btn-row delete"
+                      type="button"
+                      (click)="cancelEdit(groups[0])"
+                      title="Cancel"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                } @else {
+                  <div class="row-name-display">{{ account.name }}</div>
+                  <div class="row-balance-display">
+                    {{ formatCurrency(account.balance) }}
+                  </div>
+                  <div class="row-actions">
+                    <button
+                      class="btn-row update"
+                      type="button"
+                      (click)="startEdit(groups[0], $index)"
+                      aria-label="Edit account"
+                    >
+                      <span class="btn-icon" aria-hidden="true">✏️</span>
+                    </button>
+                    <button
+                      class="btn-row delete"
+                      type="button"
+                      (click)="deleteAccount(groups[0], $index)"
+                      aria-label="Delete account"
+                    >
+                      <span class="btn-icon" aria-hidden="true">🗑️</span>
+                    </button>
+                  </div>
+                }
               </div>
             }
           } @else {
@@ -248,14 +258,14 @@
             <div class="as-title">{{ groups[1].title }}</div>
             <div class="as-desc">{{ groups[1].subtitle }}</div>
           </div>
-          <button class="btn-export" type="button" (click)="exportGroupAsPDF(groups[1].key)">
-            <span class="btn-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-                <path d="M14 2v6h6" />
-              </svg>
-            </span>
-            PDF
+          <button
+            class="btn-export"
+            type="button"
+            (click)="exportGroupAsPDF(groups[1].key)"
+            title="Export Bank Accounts as PDF"
+            aria-label="Export Bank Accounts as PDF"
+          >
+            <span class="btn-icon" aria-hidden="true">📄</span>
           </button>
         </div>
         <div class="as-total-row">
@@ -268,48 +278,60 @@
           @if (bankAccounts.length) {
             @for (account of bankAccounts; track account._id || $index) {
               <div class="account-row editable-row">
-                <input
-                  class="form-input row-name"
-                  [(ngModel)]="account.name"
-                  placeholder="Account name"
-                />
-                <input
-                  class="form-input row-balance"
-                  type="number"
-                  [(ngModel)]="account.balance"
-                  placeholder="0"
-                />
-                <div class="row-actions">
-                  <button
-                    class="btn-row update"
-                    type="button"
-                    (click)="updateAccount(groups[1])"
-                    aria-label="Update account"
-                  >
-                    <span class="btn-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                      </svg>
-                    </span>
-                  </button>
-                  <button
-                    class="btn-row delete"
-                    type="button"
-                    (click)="deleteAccount(groups[1], $index)"
-                    aria-label="Delete account"
-                  >
-                    <span class="btn-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18" />
-                        <path d="M8 6V4h8v2" />
-                        <path d="M19 6l-1 14H6L5 6" />
-                        <path d="M10 11v6" />
-                        <path d="M14 11v6" />
-                      </svg>
-                    </span>
-                  </button>
-                </div>
+                @if (editingIndex.bankAccounts === $index) {
+                  <input
+                    class="form-input row-name"
+                    [(ngModel)]="editDraft.bankAccounts.name"
+                    placeholder="Account name"
+                  />
+                  <input
+                    class="form-input row-balance"
+                    type="number"
+                    [(ngModel)]="editDraft.bankAccounts.balance"
+                    placeholder="0"
+                  />
+                  <div class="row-actions">
+                    <button
+                      class="btn-row update"
+                      type="button"
+                      (click)="saveEdit(groups[1])"
+                      title="Save"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      class="btn-row delete"
+                      type="button"
+                      (click)="cancelEdit(groups[1])"
+                      title="Cancel"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                } @else {
+                  <div class="row-name-display">{{ account.name }}</div>
+                  <div class="row-balance-display">
+                    {{ formatCurrency(account.balance) }}
+                  </div>
+                  <div class="row-actions">
+                    <button
+                      class="btn-row update"
+                      type="button"
+                      (click)="startEdit(groups[1], $index)"
+                      aria-label="Edit account"
+                    >
+                      <span class="btn-icon" aria-hidden="true">✏️</span>
+                    </button>
+                    <button
+                      class="btn-row delete"
+                      type="button"
+                      (click)="deleteAccount(groups[1], $index)"
+                      aria-label="Delete account"
+                    >
+                      <span class="btn-icon" aria-hidden="true">🗑️</span>
+                    </button>
+                  </div>
+                }
               </div>
             }
           } @else {
@@ -354,14 +376,14 @@
             <div class="as-title">{{ groups[2].title }}</div>
             <div class="as-desc">{{ groups[2].subtitle }}</div>
           </div>
-          <button class="btn-export" type="button" (click)="exportGroupAsPDF(groups[2].key)">
-            <span class="btn-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-                <path d="M14 2v6h6" />
-              </svg>
-            </span>
-            PDF
+          <button
+            class="btn-export"
+            type="button"
+            (click)="exportGroupAsPDF(groups[2].key)"
+            title="Export Tide Accounts as PDF"
+            aria-label="Export Tide Accounts as PDF"
+          >
+            <span class="btn-icon" aria-hidden="true">📄</span>
           </button>
         </div>
         <div class="as-total-row">
@@ -374,48 +396,60 @@
           @if (tideAccounts.length) {
             @for (account of tideAccounts; track account._id || $index) {
               <div class="account-row editable-row">
-                <input
-                  class="form-input row-name"
-                  [(ngModel)]="account.name"
-                  placeholder="Account name"
-                />
-                <input
-                  class="form-input row-balance"
-                  type="number"
-                  [(ngModel)]="account.balance"
-                  placeholder="0"
-                />
-                <div class="row-actions">
-                  <button
-                    class="btn-row update"
-                    type="button"
-                    (click)="updateAccount(groups[2])"
-                    aria-label="Update account"
-                  >
-                    <span class="btn-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                      </svg>
-                    </span>
-                  </button>
-                  <button
-                    class="btn-row delete"
-                    type="button"
-                    (click)="deleteAccount(groups[2], $index)"
-                    aria-label="Delete account"
-                  >
-                    <span class="btn-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18" />
-                        <path d="M8 6V4h8v2" />
-                        <path d="M19 6l-1 14H6L5 6" />
-                        <path d="M10 11v6" />
-                        <path d="M14 11v6" />
-                      </svg>
-                    </span>
-                  </button>
-                </div>
+                @if (editingIndex.tideAccounts === $index) {
+                  <input
+                    class="form-input row-name"
+                    [(ngModel)]="editDraft.tideAccounts.name"
+                    placeholder="Account name"
+                  />
+                  <input
+                    class="form-input row-balance"
+                    type="number"
+                    [(ngModel)]="editDraft.tideAccounts.balance"
+                    placeholder="0"
+                  />
+                  <div class="row-actions">
+                    <button
+                      class="btn-row update"
+                      type="button"
+                      (click)="saveEdit(groups[2])"
+                      title="Save"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      class="btn-row delete"
+                      type="button"
+                      (click)="cancelEdit(groups[2])"
+                      title="Cancel"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                } @else {
+                  <div class="row-name-display">{{ account.name }}</div>
+                  <div class="row-balance-display">
+                    {{ formatCurrency(account.balance) }}
+                  </div>
+                  <div class="row-actions">
+                    <button
+                      class="btn-row update"
+                      type="button"
+                      (click)="startEdit(groups[2], $index)"
+                      aria-label="Edit account"
+                    >
+                      <span class="btn-icon" aria-hidden="true">✏️</span>
+                    </button>
+                    <button
+                      class="btn-row delete"
+                      type="button"
+                      (click)="deleteAccount(groups[2], $index)"
+                      aria-label="Delete account"
+                    >
+                      <span class="btn-icon" aria-hidden="true">🗑️</span>
+                    </button>
+                  </div>
+                }
               </div>
             }
           } @else {

@@ -72,6 +72,17 @@ export class OtherComponent implements OnInit {
   userName = "";
   userEmail = "";
   lastUpdated: Date | null = null;
+  editingIndex: Record<AccountGroupKey, number | null> = {
+    amazonPayAccounts: null,
+    bankAccounts: null,
+    tideAccounts: null,
+  };
+
+  editDraft: Record<AccountGroupKey, BalanceAccount> = {
+    amazonPayAccounts: { name: "", balance: 0 },
+    bankAccounts: { name: "", balance: 0 },
+    tideAccounts: { name: "", balance: 0 },
+  };
 
   constructor(
     private apiService: ApiService,
@@ -87,6 +98,42 @@ export class OtherComponent implements OnInit {
       }
     });
     this.loadBalances();
+  }
+
+  startEdit(group: AccountGroup, index: number): void {
+    const list: BalanceAccount[] = this[group.key];
+    const acct = list[index];
+    if (!acct) return;
+    // clone into draft
+    this.editDraft[group.key] = { ...acct };
+    this.editingIndex[group.key] = index;
+  }
+
+  saveEdit(group: AccountGroup): void {
+    const idx = this.editingIndex[group.key];
+    const draft = this.editDraft[group.key];
+    if (idx == null || !draft) return;
+    const name = (draft.name || "").trim();
+    if (!name) {
+      alert("Account name is required");
+      return;
+    }
+    if (draft.balance < 0) {
+      alert("Balance cannot be negative");
+      return;
+    }
+    // apply draft
+    const arr = [...this[group.key]];
+    arr[idx] = { ...arr[idx], name, balance: Number(draft.balance) || 0 };
+    this[group.key] = arr;
+    this.editingIndex[group.key] = null;
+    this.editDraft[group.key] = { name: "", balance: 0 };
+    this.saveGroup(group.key);
+  }
+
+  cancelEdit(group: AccountGroup): void {
+    this.editingIndex[group.key] = null;
+    this.editDraft[group.key] = { name: "", balance: 0 };
   }
 
   loadBalances(): void {
