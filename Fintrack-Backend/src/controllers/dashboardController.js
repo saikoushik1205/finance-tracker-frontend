@@ -66,8 +66,14 @@ exports.getDashboardStats = async (req, res) => {
     // Calculate net balance: Pending Lending - Pending Borrowing
     const netBalance = lending.pending - borrowing.pending;
 
-    // Total available cash
-    const totalCash = (cashBank?.cash || 0) + (cashBank?.bank || 0);
+    const accountTotal = (accounts = []) =>
+      accounts.reduce((sum, account) => sum + (account.balance || 0), 0);
+
+    const amazonPayTotal = accountTotal(cashBank?.amazonPayAccounts || []);
+    const bankTotal =
+      accountTotal(cashBank?.bankAccounts || []) || cashBank?.bank || 0;
+    const tideTotal = accountTotal(cashBank?.tideAccounts || []);
+    const totalCash = amazonPayTotal + bankTotal + tideTotal;
 
     res.json({
       success: true,
@@ -78,8 +84,10 @@ exports.getDashboardStats = async (req, res) => {
         expenses,
         interest,
         cashBank: {
-          cash: cashBank?.cash || 0,
-          bank: cashBank?.bank || 0,
+          cash: amazonPayTotal + tideTotal,
+          bank: bankTotal,
+          amazonPay: amazonPayTotal,
+          tide: tideTotal,
           total: totalCash,
         },
         netBalance,

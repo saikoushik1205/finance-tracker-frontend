@@ -7,6 +7,13 @@ export const interestGuard = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  if (
+    typeof sessionStorage !== "undefined" &&
+    sessionStorage.getItem("interest_unlocked") === "1"
+  ) {
+    return true;
+  }
+
   return authService.checkInterestAccess().pipe(
     map((response: any) => {
       if (response.success && response.hasAccess) {
@@ -14,6 +21,6 @@ export const interestGuard = () => {
       }
       router.navigate(["/dashboard"]);
       return false;
-    })
+    }),
   );
 };

@@ -1,5 +1,21 @@
 const mongoose = require("mongoose");
 
+const balanceAccountSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+    balance: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+  },
+  { timestamps: true }
+);
+
 const cashBankSchema = new mongoose.Schema(
   {
     userId: {
@@ -19,6 +35,18 @@ const cashBankSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    amazonPayAccounts: {
+      type: [balanceAccountSchema],
+      default: [],
+    },
+    bankAccounts: {
+      type: [balanceAccountSchema],
+      default: [],
+    },
+    tideAccounts: {
+      type: [balanceAccountSchema],
+      default: [],
+    },
     history: [
       {
         date: {
@@ -27,7 +55,7 @@ const cashBankSchema = new mongoose.Schema(
         },
         type: {
           type: String,
-          enum: ["cash", "bank"],
+          enum: ["cash", "bank", "amazonPay", "bankAccount", "tide"],
         },
         previousAmount: Number,
         newAmount: Number,

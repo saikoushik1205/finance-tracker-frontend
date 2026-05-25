@@ -4,6 +4,20 @@ import { FormsModule } from "@angular/forms";
 import { NavbarComponent } from "../../shared/components/navbar/navbar.component";
 import { ApiService } from "../../core/services/api.service";
 import { AuthService } from "../../core/services/auth.service";
+import { PdfService } from "../../core/services/pdf.service";
+import { BalanceAccount } from "../../models/app.models";
+
+type AccountGroupKey = "amazonPayAccounts" | "bankAccounts" | "tideAccounts";
+
+interface AccountGroup {
+  key: AccountGroupKey;
+  title: string;
+  subtitle: string;
+  nameLabel: string;
+  placeholder: string;
+  addLabel: string;
+  className: string;
+}
 
 @Component({
   selector: "app-other",
@@ -13,29 +27,63 @@ import { AuthService } from "../../core/services/auth.service";
   styleUrl: "./other.component.css",
 })
 export class OtherComponent implements OnInit {
-  cashBalance = 0;
-  bankBalance = 0;
+  amazonPayAccounts: BalanceAccount[] = [];
+  bankAccounts: BalanceAccount[] = [];
+  tideAccounts: BalanceAccount[] = [];
+
+  readonly groups: AccountGroup[] = [
+    {
+      key: "amazonPayAccounts",
+      title: "Amazon Pay Balance",
+      subtitle: "Multiple Amazon Pay wallets or profiles",
+      nameLabel: "Amazon account",
+      placeholder: "Personal Amazon Pay",
+      addLabel: "Add Amazon Account",
+      className: "amazon",
+    },
+    {
+      key: "bankAccounts",
+      title: "Bank Accounts",
+      subtitle: "Maintain balances across multiple banks",
+      nameLabel: "Bank name",
+      placeholder: "HDFC Bank",
+      addLabel: "Add Bank Account",
+      className: "bank",
+    },
+    {
+      key: "tideAccounts",
+      title: "Tide Prepaid Cards",
+      subtitle: "Track Tide card balances separately",
+      nameLabel: "Tide account",
+      placeholder: "Tide prepaid card",
+      addLabel: "Add Tide Account",
+      className: "tide",
+    },
+  ];
+
+  newAccounts: Record<AccountGroupKey, BalanceAccount> = {
+    amazonPayAccounts: { name: "", balance: 0 },
+    bankAccounts: { name: "", balance: 0 },
+    tideAccounts: { name: "", balance: 0 },
+  };
+
   loading = true;
-  saving = false;
-
-  tempCash = 0;
-  tempBank = 0;
-
-  editingCash = false;
-  editingBank = false;
-
+  savingKey: AccountGroupKey | null = null;
   userName = "";
+  userEmail = "";
   lastUpdated: Date | null = null;
 
   constructor(
     private apiService: ApiService,
-    private authService: AuthService
+    private authService: AuthService,
+    private pdfService: PdfService,
   ) {}
 
   ngOnInit(): void {
     this.authService.currentUser$.subscribe((user) => {
       if (user) {
         this.userName = user.displayName || user.email || "User";
+        this.userEmail = user.email || "";
       }
     });
     this.loadBalances();
@@ -45,123 +93,136 @@ export class OtherComponent implements OnInit {
     this.loading = true;
     this.apiService.getCashBank().subscribe({
       next: (response: any) => {
-        console.log("Cash Bank Response:", response);
         if (response.success) {
-          if (response.data) {
-            this.cashBalance = response.data.cash || 0;
-            this.bankBalance = response.data.bank || 0;
-            this.lastUpdated = response.data.updatedAt;
-          } else {
-            // Initialize with 0 if no data exists
-            this.cashBalance = 0;
-            this.bankBalance = 0;
+          const data = response.data || {};
+          this.amazonPayAccounts = this.cloneAccounts(data.amazonPayAccounts);
+          this.bankAccounts = this.cloneAccounts(data.bankAccounts);
+          this.tideAccounts = this.cloneAccounts(data.tideAccounts);
+
+          if (!this.bankAccounts.length && data.bank > 0) {
+            this.bankAccounts = [{ name: "Bank Account", balance: data.bank }];
           }
-          this.tempCash = this.cashBalance;
-          this.tempBank = this.bankBalance;
+
+          this.lastUpdated = data.updatedAt || null;
         }
         this.loading = false;
       },
       error: (error) => {
-        console.error("Error loading balances:", error);
+        console.error("Error loading other balances:", error);
         this.loading = false;
       },
     });
   }
 
-  startEditCash(): void {
-    this.editingCash = true;
-    this.tempCash = this.cashBalance;
-  }
+  addAccount(group: AccountGroup): void {
+    const draft = this.newAccounts[group.key];
+    const name = draft.name.trim();
 
-  cancelEditCash(): void {
-    this.editingCash = false;
-    this.tempCash = this.cashBalance;
-  }
-
-  saveCash(): void {
-    if (this.tempCash < 0) {
-      alert("Cash balance cannot be negative");
+    if (!name) {
+      alert(`${group.nameLabel} is required`);
       return;
     }
 
-    this.saving = true;
-    this.apiService.updateCashBank({ cash: this.tempCash }).subscribe({
-      next: (response: any) => {
-        console.log("Update Cash Response:", response);
-        if (response.success && response.data) {
-          this.cashBalance = response.data.cash || 0;
-          this.bankBalance = response.data.bank || 0;
-          this.tempCash = this.cashBalance;
-          this.tempBank = this.bankBalance;
-          this.editingCash = false;
-        } else {
-          alert("Update succeeded but no data returned");
-        }
-        this.saving = false;
-      },
-      error: (error) => {
-        console.error("Update cash error:", error);
-        alert("Failed to update cash balance");
-        this.saving = false;
-      },
-    });
-  }
-
-  startEditBank(): void {
-    this.editingBank = true;
-    this.tempBank = this.bankBalance;
-  }
-
-  cancelEditBank(): void {
-    this.editingBank = false;
-    this.tempBank = this.bankBalance;
-  }
-
-  saveBank(): void {
-    if (this.tempBank < 0) {
-      alert("Bank balance cannot be negative");
+    if (draft.balance < 0) {
+      alert("Balance cannot be negative");
       return;
     }
 
-    this.saving = true;
-    this.apiService.updateCashBank({ bank: this.tempBank }).subscribe({
-      next: (response: any) => {
-        console.log("Update Bank Response:", response);
-        if (response.success && response.data) {
-          this.cashBalance = response.data.cash || 0;
-          this.bankBalance = response.data.bank || 0;
-          this.tempCash = this.cashBalance;
-          this.tempBank = this.bankBalance;
-          this.editingBank = false;
-        } else {
-          alert("Update succeeded but no data returned");
-        }
-        this.saving = false;
-      },
-      error: (error) => {
-        console.error("Update bank error:", error);
-        alert("Failed to update bank balance");
-        this.saving = false;
-      },
-    });
+    this[group.key] = [
+      ...this[group.key],
+      { name, balance: draft.balance || 0 },
+    ];
+    this.newAccounts[group.key] = { name: "", balance: 0 };
+    this.saveGroup(group.key);
+  }
+
+  updateAccount(group: AccountGroup): void {
+    const invalidAccount = this[group.key].find(
+      (account) => !account.name.trim() || account.balance < 0,
+    );
+
+    if (invalidAccount) {
+      alert("Account name is required and balance cannot be negative");
+      return;
+    }
+
+    this[group.key] = this[group.key].map((account) => ({
+      ...account,
+      name: account.name.trim(),
+      balance: Number(account.balance) || 0,
+    }));
+    this.saveGroup(group.key);
+  }
+
+  deleteAccount(group: AccountGroup, index: number): void {
+    this[group.key] = this[group.key].filter(
+      (_, accountIndex) => accountIndex !== index,
+    );
+    this.saveGroup(group.key);
+  }
+
+  saveGroup(key: AccountGroupKey): void {
+    this.savingKey = key;
+    this.apiService
+      .updateCashBank({
+        amazonPayAccounts: this.cloneAccounts(this.amazonPayAccounts),
+        bankAccounts: this.cloneAccounts(this.bankAccounts),
+        tideAccounts: this.cloneAccounts(this.tideAccounts),
+      })
+      .subscribe({
+        next: (response: any) => {
+          if (response.success && response.data) {
+            this.amazonPayAccounts = this.cloneAccounts(
+              response.data.amazonPayAccounts,
+            );
+            this.bankAccounts = this.cloneAccounts(response.data.bankAccounts);
+            this.tideAccounts = this.cloneAccounts(response.data.tideAccounts);
+            this.lastUpdated = response.data.updatedAt || new Date();
+          }
+          this.savingKey = null;
+        },
+        error: (error) => {
+          console.error("Update other balances error:", error);
+          alert("Failed to update balances");
+          this.savingKey = null;
+          this.loadBalances();
+        },
+      });
+  }
+
+  getAccounts(key: AccountGroupKey): BalanceAccount[] {
+    return this[key];
+  }
+
+  getGroupTotal(key: AccountGroupKey): number {
+    return this[key].reduce(
+      (sum, account) => sum + (Number(account.balance) || 0),
+      0,
+    );
   }
 
   getTotalBalance(): number {
-    return this.cashBalance + this.bankBalance;
+    return this.groups.reduce(
+      (sum, group) => sum + this.getGroupTotal(group.key),
+      0,
+    );
   }
 
-  getCashPercentage(): number {
+  getGroupPercentage(key: AccountGroupKey): number {
     const total = this.getTotalBalance();
-    return total > 0 ? (this.cashBalance / total) * 100 : 0;
+    return total > 0 ? (this.getGroupTotal(key) / total) * 100 : 0;
   }
 
-  getBankPercentage(): number {
-    const total = this.getTotalBalance();
-    return total > 0 ? (this.bankBalance / total) * 100 : 0;
+  getLargestGroup(): AccountGroup {
+    return this.groups.reduce((largest, group) =>
+      this.getGroupTotal(group.key) > this.getGroupTotal(largest.key)
+        ? group
+        : largest,
+    );
   }
 
   formatCurrency(amount: number): string {
-    return "₹" + amount.toLocaleString("en-IN");
+    return "Rs. " + (Number(amount) || 0).toLocaleString("en-IN");
   }
 
   formatDate(date: Date | null): string {
@@ -169,9 +230,42 @@ export class OtherComponent implements OnInit {
     return new Date(date).toLocaleString("en-IN");
   }
 
-  getPercentageColor(percentage: number): string {
-    if (percentage >= 60) return "#48bb78";
-    if (percentage >= 40) return "#ed8936";
-    return "#f56565";
+  private cloneAccounts(accounts: BalanceAccount[] = []): BalanceAccount[] {
+    return accounts.map((account) => ({
+      _id: account._id,
+      name: account.name,
+      balance: Number(account.balance) || 0,
+    }));
+  }
+
+  exportGroupAsPDF(groupKey: AccountGroupKey): void {
+    const group = this.groups.find((g) => g.key === groupKey);
+    if (!group) return;
+    const accounts = this.getAccounts(groupKey).map((a) => ({
+      name: a.name,
+      balance: Number(a.balance) || 0,
+    }));
+    this.pdfService.generateOthersPDF(
+      [{ title: group.title, accounts }],
+      group.key,
+      this.userName,
+      this.userEmail,
+    );
+  }
+
+  exportAllAsPDF(): void {
+    const groupsData = this.groups.map((g) => ({
+      title: g.title,
+      accounts: this.getAccounts(g.key).map((a) => ({
+        name: a.name,
+        balance: Number(a.balance) || 0,
+      })),
+    }));
+    this.pdfService.generateOthersPDF(
+      groupsData,
+      "others",
+      this.userName,
+      this.userEmail,
+    );
   }
 }

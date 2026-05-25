@@ -18,6 +18,9 @@ export class ProfileComponent implements OnInit {
   userStats: any = null;
   loading = true;
   editingProfile = false;
+  showPrivacyModal = false;
+  showPrivacyPinModal = false;
+  privacyPin = "";
 
   profileForm = {
     displayName: "",
@@ -28,7 +31,7 @@ export class ProfileComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private apiService: ApiService,
-    private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -67,6 +70,28 @@ export class ProfileComponent implements OnInit {
 
   startEditProfile(): void {
     this.editingProfile = true;
+  }
+
+  openPrivacySettings(): void {
+    this.showPrivacyPinModal = true;
+  }
+
+  closePrivacySettings(): void {
+    this.showPrivacyPinModal = false;
+    this.privacyPin = "";
+  }
+
+  verifyPrivacyPin(): void {
+    if (this.privacyPin === "0410") {
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.setItem("interest_unlocked", "1");
+      }
+      this.showPrivacyPinModal = false;
+      this.privacyPin = "";
+      this.router.navigate(["/interest"]);
+    } else {
+      alert("Incorrect PIN");
+    }
   }
 
   cancelEditProfile(): void {
@@ -127,6 +152,10 @@ export class ProfileComponent implements OnInit {
   }
 
   hasInterestAccess(): boolean {
-    return this.user?.email === "koushiksai242@gmail.com";
+    return (
+      this.user?.email === "koushiksai242@gmail.com" ||
+      (typeof sessionStorage !== "undefined" &&
+        sessionStorage.getItem("interest_unlocked") === "1")
+    );
   }
 }

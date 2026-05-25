@@ -52,7 +52,7 @@ export class InterestComponent implements OnInit {
     private apiService: ApiService,
     private authService: AuthService,
     private pdfService: PdfService,
-    private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -66,6 +66,15 @@ export class InterestComponent implements OnInit {
   }
 
   checkAccess(): void {
+    if (
+      typeof sessionStorage !== "undefined" &&
+      sessionStorage.getItem("interest_unlocked") === "1"
+    ) {
+      this.hasAccess = true;
+      this.loadPersons();
+      return;
+    }
+
     this.authService.checkInterestAccess().subscribe({
       next: (response: any) => {
         if (response.success && response.hasAccess) {
@@ -359,7 +368,7 @@ export class InterestComponent implements OnInit {
             response.transactions,
             "interest",
             this.userName,
-            this.userEmail
+            this.userEmail,
           );
         }
       },

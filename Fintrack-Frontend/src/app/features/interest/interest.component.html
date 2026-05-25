@@ -3,8 +3,8 @@
 <div class="interest-container" *ngIf="hasAccess">
   <div class="page-header fade-in">
     <div>
-      <h1>📈 Interest</h1>
-      <p class="text-muted">Track interest on loans and investments</p>
+      <h1>📈 Intrest</h1>
+      <p class="text-muted">Track intrest on loans and investments</p>
       <p class="access-badge">🔒 Restricted Access</p>
     </div>
     <button class="btn btn-primary" (click)="openAddPersonModal()">
@@ -17,7 +17,7 @@
     <div class="summary-card glass-card">
       <div class="summary-icon total">💰</div>
       <div class="summary-content">
-        <p class="summary-label">Total Interest</p>
+        <p class="summary-label">Total Intrest</p>
         <p class="summary-value">{{ formatCurrency(getTotalAmount()) }}</p>
       </div>
     </div>
@@ -44,13 +44,13 @@
   @if (loading) {
   <div class="loading-state">
     <div class="spinner"></div>
-    <p class="text-muted">Loading interest records...</p>
+    <p class="text-muted">Loading intrest records...</p>
   </div>
   } @else if (persons.length === 0) {
   <div class="empty-state glass-card">
     <div class="empty-icon">📊</div>
-    <h3>No interest records yet</h3>
-    <p class="text-muted">Start by adding a person for interest tracking</p>
+    <h3>No intrest records yet</h3>
+    <p class="text-muted">Start by adding a person for intrest tracking</p>
     <button class="btn btn-primary" (click)="openAddPersonModal()">
       Add First Person
     </button>
@@ -75,7 +75,7 @@
 
       <div class="person-stats">
         <div class="stat-item">
-          <span class="stat-label">Total Interest</span>
+          <span class="stat-label">Total Intrest</span>
           <span class="stat-value">{{
             formatCurrency(person.stats?.total || 0)
           }}</span>
@@ -111,7 +111,7 @@
           class="btn btn-primary btn-sm"
           (click)="openAddTransactionModal(person)"
         >
-          Add Interest
+          Add Intrest
         </button>
         <button class="btn btn-secondary btn-sm" (click)="generatePDF(person)">
           📄 PDF
@@ -186,7 +186,7 @@
 <div class="modal-backdrop" (click)="closeAddTransactionModal()">
   <div class="modal glass-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Add Interest - {{ selectedPerson.name }}</h2>
+      <h2>Add Intrest - {{ selectedPerson.name }}</h2>
       <button class="close-btn" (click)="closeAddTransactionModal()">×</button>
     </div>
     <form (ngSubmit)="addTransaction()" class="modal-body">
@@ -216,7 +216,7 @@
         />
       </div>
       <div class="form-group">
-        <label for="interestRate">Interest Rate (%)</label>
+        <label for="interestRate">Intrest Rate (%)</label>
         <input
           type="number"
           id="interestRate"
@@ -231,7 +231,7 @@
         />
       </div>
       <div class="form-group">
-        <label for="transactionAmount">Interest Amount (₹) *</label>
+        <label for="transactionAmount">Intrest Amount (₹) *</label>
         <input
           type="number"
           id="transactionAmount"
@@ -278,7 +278,7 @@
         >
           Cancel
         </button>
-        <button type="submit" class="btn btn-primary">Add Interest</button>
+        <button type="submit" class="btn btn-primary">Add Intrest</button>
       </div>
     </form>
   </div>
@@ -290,7 +290,7 @@
 <div class="modal-backdrop edit-modal" (click)="closeEditTransactionModal()">
   <div class="modal glass-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Edit Interest</h2>
+      <h2>Edit Intrest</h2>
       <button class="close-btn" (click)="closeEditTransactionModal()">×</button>
     </div>
     <form (ngSubmit)="updateTransaction()" class="modal-body">
@@ -320,7 +320,7 @@
         />
       </div>
       <div class="form-group">
-        <label for="editInterestRate">Interest Rate (%)</label>
+        <label for="editInterestRate">Intrest Rate (%)</label>
         <input
           type="number"
           id="editInterestRate"
@@ -335,7 +335,7 @@
         />
       </div>
       <div class="form-group">
-        <label for="editTransactionAmount">Interest Amount (₹) *</label>
+        <label for="editTransactionAmount">Intrest Amount (₹) *</label>
         <input
           type="number"
           id="editTransactionAmount"
@@ -379,7 +379,7 @@
         >
           Cancel
         </button>
-        <button type="submit" class="btn btn-primary">Update Interest</button>
+        <button type="submit" class="btn btn-primary">Update Intrest</button>
       </div>
     </form>
   </div>
@@ -418,7 +418,7 @@
     <div class="modal-body">
       <div class="detail-summary">
         <div class="detail-stat">
-          <span class="label">Total Interest</span>
+          <span class="label">Total Intrest</span>
           <span class="value">{{
             formatCurrency(selectedPerson.stats?.total || 0)
           }}</span>
@@ -459,10 +459,10 @@
       </div>
 
       <div class="transactions-section">
-        <h3>Interest History</h3>
+        <h3>Intrest History</h3>
         @if (transactions.length === 0) {
         <div class="empty-message">
-          <p class="text-muted">No interest transactions yet</p>
+          <p class="text-muted">No intrest transactions yet</p>
         </div>
         } @else {
         <div class="transactions-list">

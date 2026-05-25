@@ -33,19 +33,9 @@
         <span>Expenses</span>
       </a>
 
-      <a
-        routerLink="/interest"
-        routerLinkActive="active"
-        class="nav-link"
-        [class.hidden]="!hasInterestAccess"
-      >
-        <span class="nav-icon">📈</span>
-        <span>Interest</span>
-      </a>
-
       <a routerLink="/other" routerLinkActive="active" class="nav-link">
         <span class="nav-icon">🏦</span>
-        <span>Cash & Bank</span>
+        <span>Others</span>
       </a>
     </div>
 
@@ -67,9 +57,9 @@
               }}
             </div>
           }
-          <span class="user-name">{{
-            currentUser.displayName || currentUser.email
-          }}</span>
+          <span class="user-name">
+            {{ currentUser.displayName || currentUser.email }}
+          </span>
           <svg
             class="chevron"
             width="16"

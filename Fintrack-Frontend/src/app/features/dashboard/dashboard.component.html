@@ -75,15 +75,15 @@
       </div>
     </div>
 
-    <!-- Cash + Bank Card -->
+    <!-- Other Balances Card -->
     <div class="stat-card glass-card slide-in">
       <div class="stat-icon cash">🏦</div>
       <div class="stat-content">
-        <h4>Cash + Bank</h4>
+        <h4>Other Balances</h4>
         <p class="stat-value">
           {{ formatCurrency(stats.summary.availableCash) }}
         </p>
-        <p class="stat-label">Available balance</p>
+        <p class="stat-label">Amazon Pay, banks and Tide</p>
       </div>
     </div>
 
@@ -230,18 +230,18 @@
       </div>
     </a>
 
-    <!-- Cash & Bank -->
+    <!-- Others -->
     <a
       routerLink="/other"
       class="section-card glass-card card-stagger card-hover-lift shine"
     >
       <div class="section-header">
         <span class="section-icon icon-hover-rotate">🏦</span>
-        <h3>Cash & Bank</h3>
+        <h3>Others</h3>
       </div>
       <div class="section-stats">
         <div class="section-stat">
-          <span class="label">Cash</span>
+          <span class="label">Amazon/Tide</span>
           <span class="value">{{ formatCurrency(stats.cashBank.cash) }}</span>
         </div>
         <div class="section-stat">

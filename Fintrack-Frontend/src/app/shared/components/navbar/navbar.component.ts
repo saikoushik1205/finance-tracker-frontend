@@ -14,27 +14,15 @@ import { User } from "../../../models/app.models";
 export class NavbarComponent implements OnInit {
   currentUser: User | null = null;
   showUserMenu = false;
-  hasInterestAccess = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+  ) {}
 
   ngOnInit(): void {
     this.authService.currentUser$.subscribe((user) => {
       this.currentUser = user;
-      if (user) {
-        this.checkInterestAccess();
-      }
-    });
-  }
-
-  checkInterestAccess(): void {
-    this.authService.checkInterestAccess().subscribe({
-      next: (response: any) => {
-        this.hasInterestAccess = response.success && response.hasAccess;
-      },
-      error: () => {
-        this.hasInterestAccess = false;
-      },
     });
   }
 

@@ -113,6 +113,36 @@ const cashBankValidation = {
       .optional()
       .isFloat({ min: 0 })
       .withMessage("Bank amount must be 0 or greater"),
+    body("amazonPayAccounts").optional().isArray(),
+    body("amazonPayAccounts.*.name")
+      .optional()
+      .trim()
+      .isLength({ min: 1, max: 100 })
+      .withMessage("Amazon Pay account name is required"),
+    body("amazonPayAccounts.*.balance")
+      .optional()
+      .isFloat({ min: 0 })
+      .withMessage("Amazon Pay balance must be 0 or greater"),
+    body("bankAccounts").optional().isArray(),
+    body("bankAccounts.*.name")
+      .optional()
+      .trim()
+      .isLength({ min: 1, max: 100 })
+      .withMessage("Bank name is required"),
+    body("bankAccounts.*.balance")
+      .optional()
+      .isFloat({ min: 0 })
+      .withMessage("Bank balance must be 0 or greater"),
+    body("tideAccounts").optional().isArray(),
+    body("tideAccounts.*.name")
+      .optional()
+      .trim()
+      .isLength({ min: 1, max: 100 })
+      .withMessage("Tide account name is required"),
+    body("tideAccounts.*.balance")
+      .optional()
+      .isFloat({ min: 0 })
+      .withMessage("Tide balance must be 0 or greater"),
   ]),
 };
 

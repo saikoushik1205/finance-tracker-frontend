@@ -6,13 +6,13 @@
 
 .main-content {
   flex: 1;
-  padding: 0 2rem 2rem;
+  padding: 0 1rem 1rem;
   position: relative;
   z-index: 1;
 }
 
 @media (max-width: 640px) {
   .main-content {
-    padding: 0 1rem 1rem;
+    padding: 0 0.75rem 0.75rem;
   }
 }

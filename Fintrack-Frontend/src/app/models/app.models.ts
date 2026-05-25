@@ -48,8 +48,19 @@ export interface Transaction {
 export interface CashBank {
   cash: number;
   bank: number;
+  amazonPay?: number;
+  tide?: number;
   total: number;
+  amazonPayAccounts?: BalanceAccount[];
+  bankAccounts?: BalanceAccount[];
+  tideAccounts?: BalanceAccount[];
   updatedAt?: Date;
+}
+
+export interface BalanceAccount {
+  _id?: string;
+  name: string;
+  balance: number;
 }
 
 export interface DashboardStats {

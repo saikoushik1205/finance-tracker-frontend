@@ -63,7 +63,7 @@ export class ApiService {
     return this.http.delete<any>(`${this.baseUrl}/transactions/${id}`);
   }
 
-  // Cash & Bank APIs
+  // Other balance APIs
   getCashBank(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/cash-bank`);
   }
