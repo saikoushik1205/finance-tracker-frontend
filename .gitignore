@@ -20,6 +20,17 @@ build/
 .angular/
 frontend/.angular/
 
+# Generalize ignore patterns for nested workspaces
+**/node_modules/
+**/dist/
+**/.angular/
+
+# Environment and logs
+.env
+.env.*
+*.local
+*.log
+
 # IDE
 .vscode/
 .idea/

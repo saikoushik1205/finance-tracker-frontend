@@ -1,0 +1,304 @@
+<app-navbar></app-navbar>
+
+<div class="other-container page">
+  @if (loading) {
+    <div class="loading-state glass-card">
+      <div class="spinner"></div>
+      <p class="text-muted">Loading balances...</p>
+    </div>
+  } @else {
+    <div class="page-header">
+      <div>
+        <div class="page-title">Others</div>
+        <div class="page-sub">
+          Manage Amazon Pay, bank accounts & Tide prepaid card balances
+        </div>
+      </div>
+      <div class="meta">
+        <div class="meta-email">{{ userEmail }}</div>
+        <div class="meta-time">Last updated: {{ formatDate(lastUpdated) }}</div>
+      </div>
+    </div>
+
+    <div class="providers-row">
+      <span class="providers-label">Providers</span>
+      <div class="provider-pill">
+        <div class="pill-dot bank"></div>
+        Bank
+      </div>
+      <div class="provider-pill">
+        <div class="pill-dot tide"></div>
+        Tide
+      </div>
+      <div class="provider-pill">
+        <div class="pill-dot amz"></div>
+        Amazon Pay
+      </div>
+    </div>
+
+    <div class="balance-hero">
+      <div>
+        <div class="balance-label">Total Other Balance</div>
+        <div class="balance-amount">
+          <span class="currency">Rs.</span
+          >{{ getTotalBalance() | number: "1.0-2" }}
+        </div>
+      </div>
+      <div class="balance-breakdown">
+        @for (group of groups; track group.key) {
+          <div class="breakdown-item">
+            <span
+              class="breakdown-name"
+              [style.color]="
+                group.className === 'amazon'
+                  ? 'var(--accent-a)'
+                  : group.className === 'bank'
+                    ? 'var(--accent-p)'
+                    : 'var(--accent-b)'
+              "
+              >{{ group.title }}</span
+            >
+            <div class="breakdown-bar-wrap">
+              <div
+                class="breakdown-bar"
+                [style.width]="getGroupPercentage(group.key) + '%'"
+                [style.background]="
+                  group.className === 'amazon'
+                    ? 'var(--accent-a)'
+                    : group.className === 'bank'
+                      ? 'var(--accent-p)'
+                      : 'var(--accent-b)'
+                "
+              ></div>
+            </div>
+            <span
+              class="breakdown-pct"
+              [style.color]="
+                group.className === 'amazon'
+                  ? 'var(--accent-a)'
+                  : group.className === 'bank'
+                    ? 'var(--accent-p)'
+                    : 'var(--accent-b)'
+              "
+              >{{ getGroupPercentage(group.key).toFixed(1) }}%</span
+            >
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="section-label">Quick Insights</div>
+    <div class="insights-grid">
+      @for (group of groups; track group.key) {
+        <div class="insight-card">
+          <div
+            class="ic-accent"
+            [style.background]="
+              group.className === 'amazon'
+                ? 'var(--accent-a)'
+                : group.className === 'bank'
+                  ? 'var(--accent-p)'
+                  : 'var(--accent-b)'
+            "
+          ></div>
+          <div class="ic-label">{{ group.title }}</div>
+          <div class="ic-amount">
+            {{ formatCurrency(getGroupTotal(group.key)) }}
+          </div>
+          <div class="ic-sub">
+            {{ getAccounts(group.key).length }}
+            {{ getAccounts(group.key).length === 1 ? "account" : "accounts" }}
+          </div>
+        </div>
+      }
+      <div class="insight-card">
+        <div class="ic-accent" style="background: var(--success)"></div>
+        <div class="ic-label">Largest Holding</div>
+        <div class="ic-amount">{{ getLargestGroup().title }}</div>
+        <div class="ic-sub">
+          {{ formatCurrency(getGroupTotal(getLargestGroup().key)) }}
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Account Management</div>
+    <div class="accounts-grid">
+      <!-- Amazon Pay (groups[0]) -->
+      <div class="account-section">
+        <div class="as-header">
+          <div class="as-icon amz">{{ groups[0].title.charAt(0) }}</div>
+          <div>
+            <div class="as-title">{{ groups[0].title }}</div>
+            <div class="as-desc">{{ groups[0].subtitle }}</div>
+          </div>
+        </div>
+        <div class="as-total-row">
+          <span class="as-total-label">Total</span>
+          <span class="as-total-value" style="color: var(--accent-a)">{{
+            formatCurrency(getGroupTotal(groups[0].key))
+          }}</span>
+        </div>
+        <div class="as-accounts">
+          @if (amazonPayAccounts.length) {
+            @for (account of amazonPayAccounts; track account._id || $index) {
+              <div class="account-row">
+                <div class="account-name">{{ account.name }}</div>
+                <div class="account-bal">
+                  {{ formatCurrency(account.balance) }}
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="empty-state">No accounts added yet.</div>
+          }
+        </div>
+        <div class="as-form">
+          <div class="as-form-title">Add Amazon Account</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Amazon account</label>
+              <input
+                class="form-input"
+                [(ngModel)]="newAccounts.amazonPayAccounts.name"
+                placeholder="Personal Amazon Pay"
+              />
+            </div>
+            <div class="form-group">
+              <label>Balance</label>
+              <input
+                class="form-input sm"
+                type="number"
+                [(ngModel)]="newAccounts.amazonPayAccounts.balance"
+              />
+            </div>
+            <button
+              class="btn-add amz"
+              type="button"
+              (click)="addAccount(groups[0])"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bank Accounts (groups[1]) -->
+      <div class="account-section">
+        <div class="as-header">
+          <div class="as-icon bank">{{ groups[1].title.charAt(0) }}</div>
+          <div>
+            <div class="as-title">{{ groups[1].title }}</div>
+            <div class="as-desc">{{ groups[1].subtitle }}</div>
+          </div>
+        </div>
+        <div class="as-total-row">
+          <span class="as-total-label">Total</span>
+          <span class="as-total-value" style="color: var(--accent-p)">{{
+            formatCurrency(getGroupTotal(groups[1].key))
+          }}</span>
+        </div>
+        <div class="as-accounts">
+          @if (bankAccounts.length) {
+            @for (account of bankAccounts; track account._id || $index) {
+              <div class="account-row">
+                <div class="account-name">{{ account.name }}</div>
+                <div class="account-bal">
+                  {{ formatCurrency(account.balance) }}
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="empty-state">No accounts added yet.</div>
+          }
+        </div>
+        <div class="as-form">
+          <div class="as-form-title">Add Bank Account</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Bank name</label>
+              <input
+                class="form-input"
+                [(ngModel)]="newAccounts.bankAccounts.name"
+                placeholder="HDFC Bank"
+              />
+            </div>
+            <div class="form-group">
+              <label>Balance</label>
+              <input
+                class="form-input sm"
+                type="number"
+                [(ngModel)]="newAccounts.bankAccounts.balance"
+              />
+            </div>
+            <button
+              class="btn-add bank"
+              type="button"
+              (click)="addAccount(groups[1])"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tide Prepaid (groups[2]) -->
+      <div class="account-section">
+        <div class="as-header">
+          <div class="as-icon tide">{{ groups[2].title.charAt(0) }}</div>
+          <div>
+            <div class="as-title">{{ groups[2].title }}</div>
+            <div class="as-desc">{{ groups[2].subtitle }}</div>
+          </div>
+        </div>
+        <div class="as-total-row">
+          <span class="as-total-label">Total</span>
+          <span class="as-total-value" style="color: var(--accent-b)">{{
+            formatCurrency(getGroupTotal(groups[2].key))
+          }}</span>
+        </div>
+        <div class="as-accounts">
+          @if (tideAccounts.length) {
+            @for (account of tideAccounts; track account._id || $index) {
+              <div class="account-row">
+                <div class="account-name">{{ account.name }}</div>
+                <div class="account-bal">
+                  {{ formatCurrency(account.balance) }}
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="empty-state">No accounts added yet.</div>
+          }
+        </div>
+        <div class="as-form">
+          <div class="as-form-title">Add Tide Account</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tide account</label>
+              <input
+                class="form-input"
+                [(ngModel)]="newAccounts.tideAccounts.name"
+                placeholder="Tide prepaid card"
+              />
+            </div>
+            <div class="form-group">
+              <label>Balance</label>
+              <input
+                class="form-input sm"
+                type="number"
+                [(ngModel)]="newAccounts.tideAccounts.balance"
+              />
+            </div>
+            <button
+              class="btn-add tide"
+              type="button"
+              (click)="addAccount(groups[2])"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
