@@ -1,12 +1,28 @@
-require("dotenv").config();
+let config;
+
+try {
+  config = require("./src/config");
+} catch (error) {
+  console.error("Environment configuration error:");
+  console.error(error.message);
+  process.exit(1);
+}
 
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const compression = require("compression");
+const mongoSanitize = require("express-mongo-sanitize");
 
 const app = express();
+
+app.disable("x-powered-by");
+
+if (config.isProduction) {
+  app.set("trust proxy", 1);
+}
 
 /* =========================
    SECURITY MIDDLEWARE
@@ -19,10 +35,13 @@ app.use(
   }),
 );
 
-// CORS - Allow all origins
+app.use(compression());
+app.use(mongoSanitize());
+
+// CORS
 app.use(
   cors({
-    origin: "*",
+    origin: config.cors.origin,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     credentials: false,
@@ -39,6 +58,8 @@ app.options("*", cors());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: "Too many requests, please try again later.",
 });
 app.use("/api/", limiter);
@@ -46,6 +67,8 @@ app.use("/api/", limiter);
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
   skipSuccessfulRequests: true,
 });
 
@@ -58,13 +81,6 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 /* =========================
    MONGODB CONNECTION
 ========================= */
-const MONGO_URI = process.env.MONGO_URI;
-
-if (!MONGO_URI) {
-  console.error("❌ MONGO_URI environment variable is not set!");
-  process.exit(1);
-}
-
 // MongoDB connection with permanent resilience
 const connectDB = async () => {
   const options = {
@@ -80,13 +96,13 @@ const connectDB = async () => {
   };
 
   try {
-    await mongoose.connect(MONGO_URI, options);
+    await mongoose.connect(config.mongo.uri, options);
     console.log("✅ MongoDB connected successfully");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err.message);
     console.error(
       "Connection string:",
-      MONGO_URI.replace(/:[^:]+@/, ":<credentials>@"),
+      config.mongo.uri.replace(/:[^:]+@/, ":<credentials>@"),
     );
     console.error("Retrying in 5 seconds...");
     setTimeout(connectDB, 5000);
@@ -118,13 +134,6 @@ process.on("SIGINT", async () => {
   process.exit(0);
 });
 
-// Only connect if MONGO_URI is provided
-if (MONGO_URI) {
-  connectDB();
-} else {
-  console.warn("⚠️ Running without database connection");
-}
-
 /* =========================
    HEALTH CHECK
 ========================= */
@@ -148,7 +157,7 @@ app.get("/api/health", (req, res) => {
   res.json({
     success: true,
     message: "FinTrack API is running",
-    environment: process.env.NODE_ENV || "development",
+    environment: config.env,
     database: dbStatusMap[dbStatus] || "unknown",
     dbDetails: {
       status: dbStatusMap[dbStatus],
@@ -231,7 +240,7 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Internal server error",
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    ...(config.isDevelopment && { stack: err.stack }),
   });
 });
 
@@ -244,14 +253,13 @@ module.exports = app;
    START SERVER LOCALLY
 ========================= */
 // Only start server if not running in Vercel
-if (process.env.VERCEL !== "1") {
+if (!config.isVercel) {
   connectDB();
 
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📡 API available at http://localhost:${PORT}/api`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
+  app.listen(config.port, () => {
+    console.log(`🚀 Server running on port ${config.port}`);
+    console.log(`📡 API available at http://localhost:${config.port}/api`);
+    console.log(`🌍 Environment: ${config.env}`);
   });
 } else {
   connectDB();

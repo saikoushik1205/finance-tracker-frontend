@@ -21,27 +21,31 @@ describe("OtherComponent", () => {
   });
 
   it("should calculate total balance correctly", () => {
-    component.cashBalance = 5000;
-    component.bankBalance = 10000;
+    component.amazonPayAccounts = [{ name: "Amazon", balance: 5000 }];
+    component.bankAccounts = [{ name: "Bank", balance: 10000 }];
+    component.tideAccounts = [];
     expect(component.getTotalBalance()).toBe(15000);
   });
 
-  it("should calculate cash percentage correctly", () => {
-    component.cashBalance = 3000;
-    component.bankBalance = 7000;
-    expect(component.getCashPercentage()).toBe(30);
+  it("should calculate Amazon Pay percentage correctly", () => {
+    component.amazonPayAccounts = [{ name: "Amazon", balance: 3000 }];
+    component.bankAccounts = [{ name: "Bank", balance: 7000 }];
+    component.tideAccounts = [];
+    expect(component.getGroupPercentage("amazonPayAccounts")).toBe(30);
   });
 
   it("should calculate bank percentage correctly", () => {
-    component.cashBalance = 4000;
-    component.bankBalance = 6000;
-    expect(component.getBankPercentage()).toBe(60);
+    component.amazonPayAccounts = [{ name: "Amazon", balance: 4000 }];
+    component.bankAccounts = [{ name: "Bank", balance: 6000 }];
+    component.tideAccounts = [];
+    expect(component.getGroupPercentage("bankAccounts")).toBe(60);
   });
 
   it("should handle zero total balance", () => {
-    component.cashBalance = 0;
-    component.bankBalance = 0;
-    expect(component.getCashPercentage()).toBe(0);
-    expect(component.getBankPercentage()).toBe(0);
+    component.amazonPayAccounts = [];
+    component.bankAccounts = [];
+    component.tideAccounts = [];
+    expect(component.getGroupPercentage("amazonPayAccounts")).toBe(0);
+    expect(component.getGroupPercentage("bankAccounts")).toBe(0);
   });
 });

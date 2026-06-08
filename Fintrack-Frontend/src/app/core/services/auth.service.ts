@@ -60,8 +60,7 @@ export class AuthService {
   }
 
   private storeAuth(token: string, user: User): void {
-    // JWT expires in 12 hours (as configured in backend)
-    const expiryTime = Date.now() + 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+    const expiryTime = this.getTokenExpiry(token);
 
     localStorage.setItem("auth_token", token);
     localStorage.setItem("user", JSON.stringify(user));
@@ -72,6 +71,31 @@ export class AuthService {
 
     // Set up auto-logout timer
     this.setTokenExpiryTimer(expiryTime);
+  }
+
+  private getTokenExpiry(token: string): number {
+    try {
+      const payloadBase64 = token.split(".")[1];
+      if (!payloadBase64) {
+        return Date.now() + 7 * 24 * 60 * 60 * 1000;
+      }
+
+      const normalizedBase64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
+      const paddedBase64 = normalizedBase64.padEnd(
+        Math.ceil(normalizedBase64.length / 4) * 4,
+        "=",
+      );
+      const payload = JSON.parse(atob(paddedBase64));
+
+      if (typeof payload.exp === "number") {
+        return payload.exp * 1000;
+      }
+    } catch (error) {
+      console.error("Failed to read token expiry from JWT:", error);
+    }
+
+    // Fallback to a longer window that matches backend token lifetime.
+    return Date.now() + 7 * 24 * 60 * 60 * 1000;
   }
 
   private setTokenExpiryTimer(expiryTime: number): void {

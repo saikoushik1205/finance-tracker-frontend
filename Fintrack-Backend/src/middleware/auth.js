@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const config = require("../config");
 
 /**
  * Verify JWT Token
@@ -18,7 +19,7 @@ const verifyToken = async (req, res, next) => {
     const token = authHeader.split("Bearer ")[1];
 
     // Verify JWT token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, config.jwt.secret);
 
     // Find user by ID
     const user = await User.findById(decoded.userId);
@@ -54,7 +55,7 @@ const generateJWT = (user) => {
       uid: user.uid,
       email: user.email,
     },
-    process.env.JWT_SECRET,
+    config.jwt.secret,
     { expiresIn: "7d" }
   );
 };
@@ -73,7 +74,7 @@ const verifyJWT = (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, config.jwt.secret);
     req.userId = decoded.id;
     req.uid = decoded.uid;
 

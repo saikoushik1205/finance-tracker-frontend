@@ -208,8 +208,6 @@ export class BorrowingComponent implements OnInit {
       return;
     }
 
-    const currentPerson = this.selectedPerson;
-
     const transactionData = {
       personId: this.selectedPerson._id,
       date: new Date(this.transactionForm.date),
@@ -222,10 +220,10 @@ export class BorrowingComponent implements OnInit {
       next: (response: any) => {
         if (response.success) {
           this.loadPersons();
-          if (this.showPersonDetailsModal && currentPerson) {
-            this.loadPersonTransactions(currentPerson._id);
-          }
           this.closeAddTransactionModal();
+          if (this.showPersonDetailsModal) {
+            this.loadPersonTransactions(this.selectedPerson!._id);
+          }
         }
       },
       error: (error) => {

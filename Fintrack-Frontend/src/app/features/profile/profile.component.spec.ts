@@ -39,10 +39,4 @@ describe("ProfileComponent", () => {
     component.user = { email: "other@example.com" };
     expect(component.hasInterestAccess()).toBe(false);
   });
-
-  it("should get provider name correctly", () => {
-    expect(component.getProviderName("google.com")).toBe("Google");
-    expect(component.getProviderName("password")).toBe("Email/Password");
-    expect(component.getProviderName("phone")).toBe("Phone Number");
-  });
 });
