@@ -9,6 +9,9 @@ jobs:
     name: Build Frontend and Backend
     runs-on: ubuntu-latest
 
+    env:
+      APP_ENV: ${{ secrets.APP_ENV }}
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -17,6 +20,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Show Environment
+        run: echo "Environment is $APP_ENV"
 
       - name: Install frontend dependencies
         working-directory: Fintrack-Frontend
