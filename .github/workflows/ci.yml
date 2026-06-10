@@ -5,8 +5,8 @@ on:
   pull_request:
 
 jobs:
-  build:
-    name: Build Frontend and Backend
+  frontend:
+    name: Build Frontend
     runs-on: ubuntu-latest
 
     env:
@@ -28,10 +28,30 @@ jobs:
         working-directory: Fintrack-Frontend
         run: npm ci
 
-      - name: Install backend dependencies
-        working-directory: Fintrack-Backend
-        run: npm ci
-
       - name: Build Angular frontend
         working-directory: Fintrack-Frontend
         run: npm run build:prod
+
+  backend:
+    needs: frontend
+    name: Install Backend
+    runs-on: ubuntu-latest
+
+    env:
+      APP_ENV: ${{ secrets.APP_ENV }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Show Environment
+        run: echo "Environment is $APP_ENV"
+
+      - name: Install backend dependencies
+        working-directory: Fintrack-Backend
+        run: npm ci
