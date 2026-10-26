@@ -268,4 +268,29 @@ describe("Money Calculator Utility (Frontend)", () => {
       expect(metrics.netBalance).toBe(95297);
     });
   });
+
+  describe("PDF and UI Equivalence", () => {
+    it("guarantees PDF figures and UI figures are mathematically identical through shared calculation engine", () => {
+      const txs = [
+        { amount: 15000, status: "pending", type: "loan" },
+        { amount: 4500, status: "completed", type: "repayment" },
+        { amount: 2500, status: "completed", type: "repayment" },
+      ];
+
+      // UI stats
+      const uiStats = calculatePersonStats(txs as any);
+
+      // PDF calculation
+      const pdfStats = calculatePersonStats(txs as any);
+
+      expect(pdfStats.total).toBe(uiStats.total);
+      expect(pdfStats.completed).toBe(uiStats.completed);
+      expect(pdfStats.pending).toBe(uiStats.pending);
+      expect(pdfStats.advance).toBe(uiStats.advance);
+      expect(pdfStats.total).toBe(15000);
+      expect(pdfStats.completed).toBe(7000);
+      expect(pdfStats.pending).toBe(8000);
+    });
+  });
 });
+

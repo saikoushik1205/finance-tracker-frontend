@@ -418,20 +418,36 @@
         } @else {
         <div class="transactions-list">
           @for (transaction of transactions; track transaction._id) {
-          <div class="transaction-item glass-card">
+          <div
+            class="transaction-item"
+            [class.loan-item]="!isRepaymentTx(transaction)"
+            [class.repayment-item]="isRepaymentTx(transaction)"
+          >
             <div class="transaction-main">
               <div class="transaction-info">
-                <p class="transaction-amount">
-                  {{ formatCurrency(transaction.amount) }}
-                </p>
+                <div class="transaction-header-line">
+                  <span
+                    class="type-pill"
+                    [class.pill-loan]="!isRepaymentTx(transaction)"
+                    [class.pill-repayment]="isRepaymentTx(transaction)"
+                  >
+                    {{ isRepaymentTx(transaction) ? "↓ Received" : "↑ Lent" }}
+                  </span>
+                  <p
+                    class="transaction-amount"
+                    [class.text-repayment]="isRepaymentTx(transaction)"
+                  >
+                    {{ isRepaymentTx(transaction) ? "+ " : "" }}{{ formatCurrency(transaction.amount) }}
+                  </p>
+                  @if (transaction.metadata?.paymentMethod) {
+                  <span class="method-tag">{{ transaction.metadata.paymentMethod }}</span>
+                  }
+                </div>
                 <p class="transaction-date">
                   {{ formatDate(transaction.date) }}
                 </p>
               </div>
               <div class="transaction-actions">
-                <span class="status-badge" [class]="transaction.status === 'pending' ? 'pending' : 'completed'">
-                  {{ transaction.status === 'pending' ? 'Pending' : 'Completed' }}
-                </span>
                 <button
                   class="transaction-edit"
                   (click)="editTransaction(transaction)"

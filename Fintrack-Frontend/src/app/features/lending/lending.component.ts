@@ -11,6 +11,7 @@ import {
   reconcilePersonStats,
   aggregatePersons,
   calculatePersonStats,
+  isRepayment,
 } from "../../core/utils/money-calculator";
 
 @Component({
@@ -32,6 +33,7 @@ export class LendingComponent implements OnInit {
   showPersonDetailsModal = false;
   isEditMode = false;
   editingTransactionId: string | null = null;
+  editingTransactionType: string = "";
   editingPersonId: string | null = null;
 
   // Settlement State
@@ -277,6 +279,7 @@ export class LendingComponent implements OnInit {
   editTransaction(transaction: Transaction): void {
     this.isEditMode = true;
     this.editingTransactionId = transaction._id;
+    this.editingTransactionType = transaction.type || (this.isRepaymentTx(transaction) ? "repayment" : "");
     this.transactionForm = {
       date: new Date(transaction.date).toISOString().split("T")[0],
       amount: transaction.amount,
@@ -299,11 +302,15 @@ export class LendingComponent implements OnInit {
     }
 
     // Status is NOT manually overridden — loan status is derived from repayments.
-    const transactionData = {
+    const transactionData: any = {
       date: new Date(this.transactionForm.date),
       amount: this.transactionForm.amount,
       remarks: this.transactionForm.remarks,
     };
+
+    if (this.editingTransactionType) {
+      transactionData.type = this.editingTransactionType;
+    }
 
     this.apiService
       .updateTransaction(this.editingTransactionId, transactionData)
@@ -403,6 +410,10 @@ export class LendingComponent implements OnInit {
 
   setPartialSettlement(): void {
     this.setCustomSettlement();
+  }
+
+  isRepaymentTx(transaction: Transaction): boolean {
+    return isRepayment(transaction);
   }
 
   mathMax(a: number, b: number): number {
