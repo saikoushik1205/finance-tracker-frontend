@@ -29,7 +29,6 @@ export interface PersonStats {
   total: number;
   pending: number;
   completed: number;
-  advance?: number;
 }
 
 export interface Transaction {
@@ -96,7 +95,6 @@ export interface SectionStats {
   total: number;
   pending: number;
   completed: number;
-  advance?: number;
 }
 
 export type SectionType =

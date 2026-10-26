@@ -1,18 +1,13 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
+import { lastValueFrom } from "rxjs";
 import { NavbarComponent } from "../../shared/components/navbar/navbar.component";
 import { ApiService } from "../../core/services/api.service";
 import { AuthService } from "../../core/services/auth.service";
 import { PdfService } from "../../core/services/pdf.service";
-import { Person, Transaction, TransactionStatus } from "../../models/app.models";
-import {
-  formatCurrency as formatMoney,
-  reconcilePersonStats,
-  aggregatePersons,
-  calculatePersonStats,
-  isRepayment,
-} from "../../core/utils/money-calculator";
+import { Person, Transaction } from "../../models/app.models";
+import { formatCurrency as formatMoney, reconcilePersonStats, aggregatePersons } from "../../core/utils/money-calculator";
 
 @Component({
   selector: "app-lending",
@@ -33,7 +28,6 @@ export class LendingComponent implements OnInit {
   showPersonDetailsModal = false;
   isEditMode = false;
   editingTransactionId: string | null = null;
-  editingTransactionType: string = "";
   editingPersonId: string | null = null;
 
   // Settlement State
@@ -48,10 +42,6 @@ export class LendingComponent implements OnInit {
     isFull: true,
   };
 
-  // Overpayment / Advance Confirmation State
-  showOverpaymentModal = false;
-  overpaymentDetails: { amount: number; pending: number; excess: number } | null = null;
-
   // Form models
   personForm = {
     name: "",
@@ -63,7 +53,7 @@ export class LendingComponent implements OnInit {
     date: new Date().toISOString().split("T")[0],
     amount: 0,
     remarks: "",
-    status: "pending" as TransactionStatus,
+    status: "completed" as any,
   };
 
   userName = "";
@@ -90,10 +80,7 @@ export class LendingComponent implements OnInit {
     this.apiService.getPersonsBySection("lending").subscribe({
       next: (response: any) => {
         if (response.success) {
-          this.persons = (response.persons || []).map((p: Person) => ({
-            ...p,
-            stats: reconcilePersonStats(p.stats),
-          }));
+          this.persons = (response.persons || []).map((p: Person) => ({ ...p, stats: reconcilePersonStats(p.stats) }));
         }
         this.loading = false;
       },
@@ -114,10 +101,7 @@ export class LendingComponent implements OnInit {
     this.personForm = { name: "", email: "", phone: "" };
   }
 
-  openEditPersonModal(person: Person, event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-    }
+  openEditPersonModal(person: Person): void {
     this.editingPersonId = person._id;
     this.personForm = {
       name: person.name,
@@ -135,51 +119,44 @@ export class LendingComponent implements OnInit {
 
   updatePerson(): void {
     if (!this.editingPersonId || !this.personForm.name.trim()) {
-      alert("Please enter a person name");
+      alert("Please enter a name");
       return;
     }
 
-    const payload = {
-      name: this.personForm.name.trim(),
-      email: this.personForm.email.trim(),
-      phone: this.personForm.phone.trim(),
+    const personData = {
+      name: this.personForm.name,
+      email: this.personForm.email,
+      phone: this.personForm.phone,
     };
 
-    this.apiService.updatePerson(this.editingPersonId, payload).subscribe({
+    this.apiService.updatePerson(this.editingPersonId, personData).subscribe({
       next: (response: any) => {
         if (response.success) {
           this.loadPersons();
           this.closeEditPersonModal();
-          if (this.selectedPerson && this.selectedPerson._id === this.editingPersonId) {
-            this.selectedPerson.name = payload.name;
-            this.selectedPerson.email = payload.email;
-            this.selectedPerson.phone = payload.phone;
+          if (this.showPersonDetailsModal && this.selectedPerson) {
+            this.selectedPerson = response.person;
           }
         }
       },
       error: (error) => {
-        const errorMessage = error.error?.errors
-          ? error.error.errors.map((e: any) => e.msg).join(", ")
-          : error.error?.message || "Failed to update person";
-        alert(errorMessage);
+        alert(error.error?.message || "Failed to update person");
       },
     });
   }
 
   addPerson(): void {
     if (!this.personForm.name.trim()) {
-      alert("Please enter a person name");
+      alert("Please enter a name");
       return;
     }
 
-    const newPerson = {
-      name: this.personForm.name.trim(),
-      email: this.personForm.email.trim(),
-      phone: this.personForm.phone.trim(),
+    const personData = {
+      ...this.personForm,
       sectionType: "lending" as const,
     };
 
-    this.apiService.createPerson(newPerson).subscribe({
+    this.apiService.createPerson(personData).subscribe({
       next: (response: any) => {
         if (response.success) {
           this.loadPersons();
@@ -187,6 +164,8 @@ export class LendingComponent implements OnInit {
         }
       },
       error: (error) => {
+        console.error("Full error:", error);
+        console.log("Error response:", error.error);
         const errorMessage = error.error?.errors
           ? error.error.errors.map((e: any) => e.msg).join(", ")
           : error.error?.message || "Failed to add person";
@@ -211,10 +190,10 @@ export class LendingComponent implements OnInit {
     this.apiService.getTransactionsByPerson(personId).subscribe({
       next: (response: any) => {
         if (response.success) {
-          this.transactions = response.transactions || [];
-          if (this.selectedPerson) {
-            this.selectedPerson.stats = calculatePersonStats(this.transactions);
-          }
+          this.transactions = (response.transactions || []).map((t: any) => ({
+            ...t,
+            status: t.status === "pending" ? "pending" : "completed",
+          }));
         }
       },
       error: (error) => {
@@ -229,7 +208,7 @@ export class LendingComponent implements OnInit {
       date: new Date().toISOString().split("T")[0],
       amount: 0,
       remarks: "",
-      status: "pending",
+      status: "completed",
     };
     this.showAddTransactionModal = true;
   }
@@ -241,7 +220,7 @@ export class LendingComponent implements OnInit {
       date: new Date().toISOString().split("T")[0],
       amount: 0,
       remarks: "",
-      status: "pending",
+      status: "completed",
     };
   }
 
@@ -256,8 +235,7 @@ export class LendingComponent implements OnInit {
       date: new Date(this.transactionForm.date),
       amount: this.transactionForm.amount,
       remarks: this.transactionForm.remarks,
-      status: "pending" as TransactionStatus,
-      type: "loan",
+      status: this.transactionForm.status,
     };
 
     this.apiService.createTransaction(transactionData).subscribe({
@@ -265,8 +243,8 @@ export class LendingComponent implements OnInit {
         if (response.success) {
           this.loadPersons();
           this.closeAddTransactionModal();
-          if (this.showPersonDetailsModal && this.selectedPerson) {
-            this.loadPersonTransactions(this.selectedPerson._id);
+          if (this.showPersonDetailsModal) {
+            this.loadPersonTransactions(this.selectedPerson!._id);
           }
         }
       },
@@ -279,7 +257,6 @@ export class LendingComponent implements OnInit {
   editTransaction(transaction: Transaction): void {
     this.isEditMode = true;
     this.editingTransactionId = transaction._id;
-    this.editingTransactionType = transaction.type || (this.isRepaymentTx(transaction) ? "repayment" : "");
     this.transactionForm = {
       date: new Date(transaction.date).toISOString().split("T")[0],
       amount: transaction.amount,
@@ -301,16 +278,12 @@ export class LendingComponent implements OnInit {
       return;
     }
 
-    // Status is NOT manually overridden — loan status is derived from repayments.
-    const transactionData: any = {
+    const transactionData = {
       date: new Date(this.transactionForm.date),
       amount: this.transactionForm.amount,
       remarks: this.transactionForm.remarks,
+      status: this.transactionForm.status,
     };
-
-    if (this.editingTransactionType) {
-      transactionData.type = this.editingTransactionType;
-    }
 
     this.apiService
       .updateTransaction(this.editingTransactionId, transactionData)
@@ -372,9 +345,7 @@ export class LendingComponent implements OnInit {
     });
   }
 
-  // =========================================================================
-  // Settlement Handlers (Non-destructive, creates Repayment records only)
-  // =========================================================================
+  // Settlement Handlers
   openSettleModal(person: Person): void {
     this.settleTargetPerson = person;
     const pending = person.stats?.pending || 0;
@@ -385,16 +356,12 @@ export class LendingComponent implements OnInit {
       remarks: "",
       isFull: true,
     };
-    this.showOverpaymentModal = false;
-    this.overpaymentDetails = null;
     this.showSettleModal = true;
   }
 
   closeSettleModal(): void {
     this.showSettleModal = false;
     this.settleTargetPerson = null;
-    this.showOverpaymentModal = false;
-    this.overpaymentDetails = null;
     this.settling = false;
   }
 
@@ -412,10 +379,6 @@ export class LendingComponent implements OnInit {
     this.setCustomSettlement();
   }
 
-  isRepaymentTx(transaction: Transaction): boolean {
-    return isRepayment(transaction);
-  }
-
   mathMax(a: number, b: number): number {
     return Math.max(a, b);
   }
@@ -429,78 +392,122 @@ export class LendingComponent implements OnInit {
       alert("Please enter a valid settlement amount greater than 0");
       return;
     }
-
-    // Check for overpayment / advance
     if (amountToSettle > pending) {
-      const excess = Number((amountToSettle - pending).toFixed(2));
-      this.overpaymentDetails = {
-        amount: amountToSettle,
-        pending,
-        excess,
-      };
-      this.showOverpaymentModal = true;
+      alert(
+        `Settlement amount (${this.formatCurrency(amountToSettle)}) cannot exceed current pending balance (${this.formatCurrency(pending)})`
+      );
       return;
     }
 
-    // Normal settlement
-    this.executeSettlement(amountToSettle, false, 0);
-  }
-
-  confirmOverpaymentAndExecute(): void {
-    if (!this.overpaymentDetails) return;
-    const { amount, excess } = this.overpaymentDetails;
-    this.showOverpaymentModal = false;
-    this.executeSettlement(amount, true, excess);
-  }
-
-  cancelOverpayment(): void {
-    this.showOverpaymentModal = false;
-    this.overpaymentDetails = null;
-  }
-
-  private executeSettlement(
-    amountToSettle: number,
-    isAdvance: boolean,
-    excessAmount: number
-  ): void {
-    if (!this.settleTargetPerson) return;
     this.settling = true;
     const personId = this.settleTargetPerson._id;
-
-    const defaultNote = `Settlement received: ${this.formatCurrency(amountToSettle)} via ${this.settleForm.paymentMethod}${isAdvance ? ` (Includes ${this.formatCurrency(excessAmount)} advance)` : ""}`;
+    const defaultNote = `Settlement received: ${this.formatCurrency(amountToSettle)} via ${this.settleForm.paymentMethod}`;
     const finalRemarks = this.settleForm.remarks.trim()
       ? `${defaultNote} - ${this.settleForm.remarks.trim()}`
       : defaultNote;
 
-    const repaymentPayload = {
-      personId,
-      date: new Date(this.settleForm.date),
-      amount: amountToSettle,
-      type: "repayment",
-      status: "completed" as TransactionStatus,
-      remarks: finalRemarks,
-      metadata: {
-        paymentMethod: this.settleForm.paymentMethod,
-        note: this.settleForm.remarks.trim(),
-        ...(isAdvance ? { advanceAmount: excessAmount } : {}),
-      },
-    };
+    this.apiService.getTransactionsByPerson(personId).subscribe({
+      next: async (response: any) => {
+        if (!response.success) {
+          alert("Failed to retrieve transactions for settlement");
+          this.settling = false;
+          return;
+        }
 
-    // Rule 1: Non-destructive Settle Up.
-    // Creates a separate Repayment record, NEVER edits, splits or mutates loans.
-    this.apiService.createTransaction(repaymentPayload).subscribe({
-      next: (response: any) => {
-        this.settling = false;
-        this.closeSettleModal();
-        this.loadPersons();
-        if (this.showPersonDetailsModal && this.selectedPerson?._id === personId) {
-          this.loadPersonTransactions(personId);
+        const allTx: Transaction[] = response.transactions || [];
+        const pendingTx = allTx
+          .filter((t) => t.status === "pending")
+          .sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          );
+
+        let remainingToAllocate = amountToSettle;
+        const updatePromises: Promise<any>[] = [];
+
+        for (const tx of pendingTx) {
+          if (remainingToAllocate <= 0) break;
+
+          if (remainingToAllocate >= tx.amount) {
+            remainingToAllocate -= tx.amount;
+            const updatedRemarks = tx.remarks
+              ? `${tx.remarks} | Settled via ${this.settleForm.paymentMethod}`
+              : `Settled via ${this.settleForm.paymentMethod}`;
+
+            updatePromises.push(
+              lastValueFrom(
+                this.apiService.updateTransaction(tx._id, {
+                  status: "completed",
+                  remarks: updatedRemarks,
+                })
+              )
+            );
+          } else {
+            const partialSettleAmount = remainingToAllocate;
+            const remainingTxAmount = tx.amount - partialSettleAmount;
+            remainingToAllocate = 0;
+
+            updatePromises.push(
+              lastValueFrom(
+                this.apiService.updateTransaction(tx._id, {
+                  amount: remainingTxAmount,
+                  status: "pending",
+                  remarks: tx.remarks
+                    ? `${tx.remarks} (Remaining pending after partial settlement)`
+                    : "Remaining pending after partial settlement",
+                })
+              )
+            );
+
+            updatePromises.push(
+              lastValueFrom(
+                this.apiService.createTransaction({
+                  personId: personId,
+                  date: new Date(this.settleForm.date),
+                  amount: partialSettleAmount,
+                  status: "completed",
+                  remarks: finalRemarks,
+                })
+              )
+            );
+          }
+        }
+
+        if (pendingTx.length === 0 && remainingToAllocate > 0) {
+          updatePromises.push(
+            lastValueFrom(
+              this.apiService.createTransaction({
+                personId: personId,
+                date: new Date(this.settleForm.date),
+                amount: remainingToAllocate,
+                status: "completed",
+                remarks: finalRemarks,
+              })
+            )
+          );
+        }
+
+        try {
+          await Promise.all(updatePromises);
+          this.settling = false;
+          this.closeSettleModal();
+          this.loadPersons();
+          if (
+            this.showPersonDetailsModal &&
+            this.selectedPerson?._id === personId
+          ) {
+            this.loadPersonTransactions(personId);
+          }
+        } catch (err: any) {
+          console.error("Settlement error:", err);
+          alert(err.message || "Failed to complete settlement");
+          this.settling = false;
+          this.loadPersons();
         }
       },
-      error: (error) => {
+      error: (err) => {
+        console.error("Error in settlement:", err);
+        alert("Failed to process settlement");
         this.settling = false;
-        console.error("Settlement error:", error);
-        alert(error.error?.message || "Failed to process settlement");
       },
     });
   }
@@ -511,7 +518,7 @@ export class LendingComponent implements OnInit {
         if (response.success) {
           this.pdfService.generatePersonPDF(
             person,
-            response.transactions || [],
+            response.transactions,
             "lending",
             this.userName,
             this.userEmail
@@ -519,10 +526,13 @@ export class LendingComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error("Error generating PDF:", error);
         alert("Failed to generate PDF");
       },
     });
+  }
+
+  formatCurrency(amount: number): string {
+    return formatMoney(amount);
   }
 
   formatDate(date: Date): string {
@@ -533,23 +543,11 @@ export class LendingComponent implements OnInit {
     return aggregatePersons(this.persons).total;
   }
 
-  getTotalLent(): number {
-    return aggregatePersons(this.persons).total;
-  }
-
   getTotalPending(): number {
     return aggregatePersons(this.persons).pending;
   }
 
   getTotalCompleted(): number {
     return aggregatePersons(this.persons).completed;
-  }
-
-  getTotalReturned(): number {
-    return aggregatePersons(this.persons).completed;
-  }
-
-  formatCurrency(amount: number): string {
-    return formatMoney(amount);
   }
 }
