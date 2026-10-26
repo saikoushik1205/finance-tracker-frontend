@@ -185,7 +185,10 @@ export class BorrowingComponent implements OnInit {
     this.apiService.getTransactionsByPerson(personId).subscribe({
       next: (response: any) => {
         if (response.success) {
-          this.transactions = response.transactions;
+          this.transactions = (response.transactions || []).map((t: any) => ({
+            ...t,
+            status: t.status === "pending" ? "pending" : "completed",
+          }));
         }
       },
       error: (error) => {
@@ -363,8 +366,12 @@ export class BorrowingComponent implements OnInit {
     this.settleForm.amount = this.settleTargetPerson.stats?.pending || 0;
   }
 
-  setPartialSettlement(): void {
+  setCustomSettlement(): void {
     this.settleForm.isFull = false;
+  }
+
+  setPartialSettlement(): void {
+    this.setCustomSettlement();
   }
 
   mathMax(a: number, b: number): number {

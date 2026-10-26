@@ -110,7 +110,7 @@ export class PdfService {
       doc.text("Account Status: FULLY SETTLED (NO PENDING DUES)", 25, yPos + 22);
     } else if (completedAmount > 0 && pendingAmount > 0) {
       doc.setTextColor(217, 119, 6);
-      doc.text(`Account Status: PARTIALLY SETTLED (Rs. ${pendingAmount.toLocaleString("en-IN")} pending)`, 25, yPos + 22);
+      doc.text(`Account Status: PENDING DUES (Rs. ${pendingAmount.toLocaleString("en-IN")})`, 25, yPos + 22);
     } else {
       doc.setTextColor(220, 38, 38);
       doc.text("Account Status: PAYMENT PENDING", 25, yPos + 22);

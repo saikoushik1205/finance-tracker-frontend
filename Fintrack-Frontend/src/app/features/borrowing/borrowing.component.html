@@ -441,8 +441,8 @@
                 </p>
               </div>
               <div class="transaction-actions">
-                <span class="status-badge" [class]="transaction.status">
-                  {{ transaction.status }}
+                <span class="status-badge" [class]="transaction.status === 'pending' ? 'pending' : 'completed'">
+                  {{ transaction.status === 'pending' ? 'Pending' : 'Completed' }}
                 </span>
                 <button
                   class="transaction-edit"
@@ -566,7 +566,7 @@
           type="button"
           class="settle-pill-btn"
           [class.active]="!settleForm.isFull"
-          (click)="setPartialSettlement()"
+          (click)="setCustomSettlement()"
         >
           <span>Custom Amount</span>
         </button>
