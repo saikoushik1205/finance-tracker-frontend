@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Person, Transaction } from "../../models/app.models";
+import { calculatePersonStats } from "../utils/money-calculator";
 
 @Injectable({
   providedIn: "root",
@@ -55,14 +56,11 @@ export class PdfService {
     }
     yPos += 8;
 
-    // Calculate Summary
-    const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
-    const completedAmount = transactions
-      .filter((t) => t.status === "completed")
-      .reduce((sum, t) => sum + t.amount, 0);
-    const pendingAmount = transactions
-      .filter((t) => t.status === "pending")
-      .reduce((sum, t) => sum + t.amount, 0);
+    // Calculate Summary using accurate centralized accounting
+    const stats = calculatePersonStats(transactions);
+    const totalAmount = stats.total;
+    const completedAmount = stats.completed;
+    const pendingAmount = stats.pending;
 
     const isLending = sectionType === "lending";
     const totalLabel = isLending ? "Total Lent:" : "Total Borrowed:";

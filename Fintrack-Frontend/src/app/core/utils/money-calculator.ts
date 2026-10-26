@@ -39,6 +39,26 @@ export function formatCurrency(
 }
 
 /**
+ * Checks whether a transaction is a settlement / repayment
+ */
+export function isSettlementTransaction(t: Transaction | any): boolean {
+  if (!t) return false;
+  const type = (t.type || "").trim().toLowerCase();
+  if (type === "repayment") return true;
+  const remarks = (t.remarks || "").trim();
+  if (
+    remarks.startsWith("Settlement received") ||
+    remarks.startsWith("Settlement repaid") ||
+    remarks.startsWith("Settlement paid") ||
+    remarks.includes("Settled via") ||
+    remarks.includes("Repaid via")
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Calculates person/ledger statistics from their transactions.
  * Strict Invariant: Pending === Total - Completed (Returned)
  */
@@ -63,36 +83,29 @@ export function calculatePersonStats(transactions: Transaction[] = []): PersonSt
     };
   }
 
-  let totalPaise = 0;
-  let completedPaise = 0;
-  let pendingPaise = 0;
+  let loansPaise = 0;
+  let settlementsPaise = 0;
+  let legacyCompletedPaise = 0;
 
   for (const t of activeTransactions) {
     const amtPaise = toPaise(t.amount);
-    totalPaise += amtPaise;
 
-    if (t.status === "completed" || (t.status as string) === "partial") {
-      completedPaise += amtPaise;
-    } else if (t.status === "pending") {
-      pendingPaise += amtPaise;
-    }
-  }
-
-  // Strict invariant: Pending = Total - Completed
-  if (totalPaise > 0) {
-    if (completedPaise === 0 && pendingPaise > 0 && pendingPaise < totalPaise) {
-      completedPaise = totalPaise - pendingPaise;
+    if (isSettlementTransaction(t)) {
+      settlementsPaise += amtPaise;
     } else {
-      pendingPaise = Math.max(0, totalPaise - completedPaise);
+      loansPaise += amtPaise;
+      if (t.status === "completed" || (t.status as string) === "partial") {
+        legacyCompletedPaise += amtPaise;
+      }
     }
-  } else {
-    completedPaise = 0;
-    pendingPaise = 0;
   }
+
+  const completedPaise = settlementsPaise + legacyCompletedPaise;
+  const pendingPaise = Math.max(0, loansPaise - completedPaise);
 
   return {
     transactionCount: activeTransactions.length,
-    total: fromPaise(totalPaise),
+    total: fromPaise(loansPaise),
     completed: fromPaise(completedPaise),
     pending: fromPaise(pendingPaise),
   };
