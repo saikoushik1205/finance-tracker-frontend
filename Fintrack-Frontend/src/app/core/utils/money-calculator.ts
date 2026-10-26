@@ -1,9 +1,19 @@
 import { Person, PersonStats, Transaction, DashboardStats } from "../../models/app.models";
 
 /**
- * Centralized Money Calculation Utility for FinTrack
- * All arithmetic uses integer paise (1 Rupee = 100 Paise) to avoid floating-point errors.
- * Supported transaction statuses: Pending and Completed (Returned).
+ * Centralized Money Calculation Utility for FinTrack (Frontend)
+ * Strictly uses integer paise (1 Rupee = 100 Paise) internally to avoid floating-point errors.
+ * 
+ * Rules:
+ * 1. Total = sum of loans.
+ * 2. Returned = sum of repayments.
+ * 3. Pending = Math.max(0, Total - Returned).
+ * 4. Advance = Math.max(0, Returned - Total).
+ * 
+ * Includes clearly marked TEMPORARY LEGACY ADAPTER to handle historical rows:
+ * - Legacy rows with status COMPLETED loans
+ * - Legacy split loans (containing "(Remaining pending after partial settlement)")
+ * - Legacy settlement rows (containing "Settlement received" or "Settled via")
  */
 
 /**
@@ -38,9 +48,53 @@ export function formatCurrency(
   }).format(value);
 }
 
+/* =========================================================================
+   TEMPORARY LEGACY ADAPTER
+   Identifies and classifies historical transactions created before the clean
+   non-destructive ledger model.
+   ========================================================================= */
+
 /**
- * Calculates person/ledger statistics from their transactions.
- * Strict Invariant: Pending === Total - Completed (Returned)
+ * Checks whether a transaction is a repayment record:
+ * - Clean model: type === 'repayment'
+ * - Legacy model: remarks start with "Settlement received" or contain "Settled via"
+ */
+export function isRepayment(t: Partial<Transaction> | null | undefined): boolean {
+  if (!t) return false;
+  const type = (t.type || "").trim().toLowerCase();
+  if (type === "repayment") return true;
+
+  const remarks = (t.remarks || "").trim();
+  if (remarks.startsWith("Settlement received")) return true;
+
+  return false;
+}
+
+/**
+ * Checks whether a transaction is a legacy loan that was split in-place
+ * by the previous settle-up handler.
+ */
+export function isLegacySplitLoan(t: Partial<Transaction> | null | undefined): boolean {
+  if (!t || !t.remarks) return false;
+  return t.remarks.includes("(Remaining pending after partial settlement)");
+}
+
+/**
+ * Checks whether a transaction is a legacy loan marked "completed"
+ * directly (without a separate repayment record).
+ */
+export function isLegacyCompletedLoan(t: Partial<Transaction> | null | undefined): boolean {
+  if (!t) return false;
+  if (isRepayment(t)) return false;
+  return t.status === "completed";
+}
+
+/**
+ * Calculates person/ledger totals using integer paise:
+ * - Total: Sum of all loans (restoring legacy split amounts if applicable)
+ * - Returned: Sum of all repayments + legacy completed loans
+ * - Pending: Remaining unpaid balance (max(0, Total - Returned))
+ * - Advance: Overpayment amount if repayments exceed loans (max(0, Returned - Total))
  */
 export function calculatePersonStats(transactions: Transaction[] = []): PersonStats {
   if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
@@ -49,6 +103,7 @@ export function calculatePersonStats(transactions: Transaction[] = []): PersonSt
       total: 0,
       completed: 0,
       pending: 0,
+      advance: 0,
     };
   }
 
@@ -60,96 +115,93 @@ export function calculatePersonStats(transactions: Transaction[] = []): PersonSt
       total: 0,
       completed: 0,
       pending: 0,
+      advance: 0,
     };
   }
 
-  let totalPaise = 0;
-  let completedPaise = 0;
-  let pendingPaise = 0;
+  let loansPaise = 0;
+  let repaymentsPaise = 0;
 
   for (const t of activeTransactions) {
     const amtPaise = toPaise(t.amount);
-    totalPaise += amtPaise;
 
-    if (t.status === "completed" || (t.status as string) === "partial") {
-      completedPaise += amtPaise;
-    } else if (t.status === "pending") {
-      pendingPaise += amtPaise;
-    }
-  }
-
-  // Strict invariant: Pending = Total - Completed
-  if (totalPaise > 0) {
-    if (completedPaise === 0 && pendingPaise > 0 && pendingPaise < totalPaise) {
-      completedPaise = totalPaise - pendingPaise;
+    if (isRepayment(t)) {
+      // Repayment record
+      repaymentsPaise += amtPaise;
+    } else if (isLegacyCompletedLoan(t)) {
+      // Legacy loan that was marked completed directly in place.
+      // Contributes to total lent and is fully accounted as returned.
+      loansPaise += amtPaise;
+      repaymentsPaise += amtPaise;
     } else {
-      pendingPaise = Math.max(0, totalPaise - completedPaise);
+      // Active loan (Clean loan or Legacy Split loan)
+      loansPaise += amtPaise;
     }
-  } else {
-    completedPaise = 0;
-    pendingPaise = 0;
   }
+
+  // Enforce invariant:
+  // Pending = max(0, Total - Returned)
+  // Advance = max(0, Returned - Total)
+  const pendingPaise = Math.max(0, loansPaise - repaymentsPaise);
+  const advancePaise = Math.max(0, repaymentsPaise - loansPaise);
 
   return {
     transactionCount: activeTransactions.length,
-    total: fromPaise(totalPaise),
-    completed: fromPaise(completedPaise),
+    total: fromPaise(loansPaise),
+    completed: fromPaise(repaymentsPaise),
     pending: fromPaise(pendingPaise),
+    advance: fromPaise(advancePaise),
   };
 }
 
 /**
  * Reconciles an existing PersonStats object from backend.
- * Strict Invariant: Pending === Total - Completed
+ * Enforces invariant: Pending === max(0, Total - Completed)
  */
 export function reconcilePersonStats(stats?: PersonStats): PersonStats {
   if (!stats) {
-    return { transactionCount: 0, total: 0, completed: 0, pending: 0 };
+    return { transactionCount: 0, total: 0, completed: 0, pending: 0, advance: 0 };
   }
 
   const totalPaise = toPaise(stats.total);
-  let completedPaise = toPaise(stats.completed);
-  let pendingPaise = toPaise(stats.pending);
-
-  if (totalPaise > 0) {
-    if (completedPaise === 0 && pendingPaise > 0 && pendingPaise < totalPaise) {
-      completedPaise = totalPaise - pendingPaise;
-    } else {
-      pendingPaise = Math.max(0, totalPaise - completedPaise);
-    }
-  } else {
-    completedPaise = 0;
-    pendingPaise = 0;
-  }
+  const completedPaise = toPaise(stats.completed);
+  const pendingPaise = Math.max(0, totalPaise - completedPaise);
+  const advancePaise = Math.max(0, completedPaise - totalPaise);
 
   return {
     transactionCount: stats.transactionCount || 0,
     total: fromPaise(totalPaise),
     completed: fromPaise(completedPaise),
     pending: fromPaise(pendingPaise),
+    advance: fromPaise(advancePaise),
   };
 }
 
 /**
  * Aggregates summary totals across a list of persons:
- * Total === Completed + Pending
+ * Total === sum of totals
+ * Completed === sum of completed
+ * Pending === max(0, Total - Completed)
  */
 export function aggregatePersons(persons: Person[] = []): {
   total: number;
   completed: number;
   pending: number;
+  advance: number;
 } {
   if (!persons || !Array.isArray(persons) || persons.length === 0) {
-    return { total: 0, completed: 0, pending: 0 };
+    return { total: 0, completed: 0, pending: 0, advance: 0 };
   }
 
   let totalPaise = 0;
   let completedPaise = 0;
+  let advancePaise = 0;
 
   for (const p of persons) {
     const stats = reconcilePersonStats(p.stats);
     totalPaise += toPaise(stats.total);
     completedPaise += toPaise(stats.completed);
+    advancePaise += toPaise(stats.advance);
   }
 
   const pendingPaise = Math.max(0, totalPaise - completedPaise);
@@ -158,6 +210,7 @@ export function aggregatePersons(persons: Person[] = []): {
     total: fromPaise(totalPaise),
     completed: fromPaise(completedPaise),
     pending: fromPaise(pendingPaise),
+    advance: fromPaise(advancePaise),
   };
 }
 

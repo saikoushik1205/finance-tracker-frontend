@@ -300,19 +300,7 @@
           required
         />
       </div>
-      <div class="form-group">
-        <label for="editTransactionStatus">Status</label>
-        <select
-          id="editTransactionStatus"
-          class="form-control"
-          [(ngModel)]="transactionForm.status"
-          name="status"
-        >
-          <option value="completed">Returned</option>
-          <option value="pending">Pending</option>
-          
-        </select>
-      </div>
+      
       <div class="form-group">
         <label for="editTransactionRemarks">Remarks</label>
         <textarea
@@ -581,14 +569,20 @@
           [(ngModel)]="settleForm.amount"
           name="amount"
           min="1"
-          [max]="settleTargetPerson.stats?.pending || 0"
           required
         />
         <div class="settle-calc-preview">
-          <span>Remaining pending after this: </span>
-          <strong [class.text-success]="(settleTargetPerson.stats?.pending || 0) - settleForm.amount <= 0" [class.text-warning]="(settleTargetPerson.stats?.pending || 0) - settleForm.amount > 0">
-            {{ formatCurrency(mathMax(0, (settleTargetPerson.stats?.pending || 0) - settleForm.amount)) }}
-          </strong>
+          @if (settleForm.amount > (settleTargetPerson.stats?.pending || 0)) {
+            <span class="text-warning">⚠️ Advance: </span>
+            <strong class="text-warning">
+              +{{ formatCurrency(settleForm.amount - (settleTargetPerson.stats?.pending || 0)) }}
+            </strong>
+          } @else {
+            <span>Remaining pending after this: </span>
+            <strong [class.text-success]="(settleTargetPerson.stats?.pending || 0) - settleForm.amount <= 0" [class.text-warning]="(settleTargetPerson.stats?.pending || 0) - settleForm.amount > 0">
+              {{ formatCurrency(mathMax(0, (settleTargetPerson.stats?.pending || 0) - settleForm.amount)) }}
+            </strong>
+          }
         </div>
       </div>
 
@@ -644,16 +638,81 @@
         <button
           type="submit"
           class="btn btn-success btn-settle-confirm"
-          [disabled]="settling || settleForm.amount <= 0 || settleForm.amount > (settleTargetPerson.stats?.pending || 0)"
+          [disabled]="settling || settleForm.amount <= 0"
         >
           @if (settling) {
             <span>Processing Settlement...</span>
+          } @else if (settleForm.amount > (settleTargetPerson.stats?.pending || 0)) {
+            <span>🤝 Review & Settle {{ formatCurrency(settleForm.amount) }}</span>
           } @else {
             <span>🤝 Confirm Settlement {{ formatCurrency(settleForm.amount) }}</span>
           }
         </button>
       </div>
     </form>
+  </div>
+</div>
+}
+
+<!-- Overpayment / Advance Confirmation Modal -->
+@if (showOverpaymentModal && overpaymentDetails && settleTargetPerson) {
+<div class="modal-backdrop overpayment-backdrop" (click)="cancelOverpayment()">
+  <div class="modal overpayment-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <span class="modal-badge-settle" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border-color: rgba(245, 158, 11, 0.4);">Overpayment Notice</span>
+        <h2>Confirm Advance Payment</h2>
+      </div>
+      <button class="close-btn" (click)="cancelOverpayment()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <p class="overpayment-desc">
+        The settlement amount of <strong>{{ formatCurrency(overpaymentDetails.amount) }}</strong> exceeds the current pending balance of <strong>{{ formatCurrency(overpaymentDetails.pending) }}</strong> for <strong>{{ settleTargetPerson.name }}</strong>.
+      </p>
+
+      <div class="overpayment-breakdown-box">
+        <div class="breakdown-row">
+          <span>Current Pending Balance:</span>
+          <strong>{{ formatCurrency(overpaymentDetails.pending) }}</strong>
+        </div>
+        <div class="breakdown-row">
+          <span>Total Received Payment:</span>
+          <strong class="text-success">{{ formatCurrency(overpaymentDetails.amount) }}</strong>
+        </div>
+        <div class="breakdown-row highlight-excess">
+          <span>Excess Amount (Advance):</span>
+          <strong class="text-warning">+{{ formatCurrency(overpaymentDetails.excess) }}</strong>
+        </div>
+      </div>
+
+      <p class="advance-explainer">
+        FinTrack will record this payment as a repayment of <strong>{{ formatCurrency(overpaymentDetails.amount) }}</strong>. The remaining pending balance will be ₹0, and the excess <strong>{{ formatCurrency(overpaymentDetails.excess) }}</strong> will be recorded as an Advance.
+      </p>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="cancelOverpayment()"
+        [disabled]="settling"
+      >
+        Adjust Amount
+      </button>
+      <button
+        type="button"
+        class="btn btn-success"
+        (click)="confirmOverpaymentAndExecute()"
+        [disabled]="settling"
+      >
+        @if (settling) {
+          <span>Recording Advance...</span>
+        } @else {
+          <span>Yes, Record Advance</span>
+        }
+      </button>
+    </div>
   </div>
 </div>
 }
