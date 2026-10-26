@@ -872,12 +872,26 @@ label {
   font-size: 0.82rem !important;
 }
 
-.person-meta, .person-detail {
+.person-detail {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  color: var(--text-tertiary) !important;
+  font-size: 0.82rem !important;
+  margin: 0.2rem 0 0 0 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.person-meta {
   display: inline-flex !important;
   align-items: center !important;
   gap: 0.45rem !important;
   color: var(--text-tertiary) !important;
   font-size: 0.85rem !important;
+  margin-right: 1.25rem !important;
 }
 
 .meta-icon {
