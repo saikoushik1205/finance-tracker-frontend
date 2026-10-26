@@ -51,8 +51,8 @@
           } @else {
             <div class="user-avatar-placeholder">
               {{
-                currentUser.displayName?.charAt(0) ||
-                  currentUser.email?.charAt(0) ||
+                currentUser.displayName.charAt(0) ||
+                  currentUser.email.charAt(0) ||
                   "U"
               }}
             </div>

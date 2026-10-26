@@ -71,9 +71,9 @@
           }
         </div>
         <div class="balance-sub-details">
-          <span>Pending Lent: {{ formatCurrency(stats.summary.pendingLent) }}</span>
+          <span>Pending Lent: {{ formatCurrency(stats.lending.pending) }}</span>
           <span class="sep">•</span>
-          <span>Pending Borrowed: {{ formatCurrency(stats.summary.pendingBorrowed) }}</span>
+          <span>Pending Borrowed: {{ formatCurrency(stats.borrowing.pending) }}</span>
         </div>
       </div>
     </div>
@@ -92,7 +92,7 @@
           {{ formatCurrency(stats.summary.totalLent) }}
         </div>
         <div class="stat-footnote">
-          <span>Pending: {{ formatCurrency(stats.summary.pendingLent) }}</span>
+          <span>Pending: {{ formatCurrency(stats.lending.pending) }}</span>
         </div>
       </div>
     </div>
@@ -108,7 +108,7 @@
           {{ formatCurrency(stats.summary.totalBorrowed) }}
         </div>
         <div class="stat-footnote">
-          <span>Pending: {{ formatCurrency(stats.summary.pendingBorrowed) }}</span>
+          <span>Pending: {{ formatCurrency(stats.borrowing.pending) }}</span>
         </div>
       </div>
     </div>
