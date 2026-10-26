@@ -45,35 +45,61 @@
   <div class="hero-balance-section slide-in">
     <div class="net-balance-card glass-card">
       <div class="balance-card-glow"></div>
-      <div class="balance-top-row">
-        <div class="balance-meta">
-          <span class="balance-badge">Total Position</span>
+      
+      <div class="net-balance-grid">
+        <!-- Main Balance Block -->
+        <div class="balance-main-block">
+          <div class="balance-top-row">
+            <span class="balance-badge">Total Position</span>
+            <div class="balance-icon-pill">
+              <span>💰</span>
+            </div>
+          </div>
           <h3 class="balance-title">Net Balance</h3>
+          <div class="balance-figure-row">
+            <div class="balance-amount" [ngClass]="getNetBalanceClass()">
+              {{ formatCurrency(stats.netBalance) }}
+            </div>
+          </div>
+          <div class="health-indicator" [ngClass]="stats.netBalance >= 0 ? 'health-good' : 'health-caution'">
+            <span class="health-dot"></span>
+            @if (stats.netBalance >= 0) {
+              <span>Positive Cashflow & Margin</span>
+            } @else {
+              <span>Borrowing Outweighs Lending</span>
+            }
+          </div>
         </div>
-        <div class="balance-icon-pill">
-          <span>💰</span>
-        </div>
-      </div>
 
-      <div class="balance-figure-row">
-        <div class="balance-amount" [ngClass]="getNetBalanceClass()">
-          {{ formatCurrency(stats.netBalance) }}
-        </div>
-      </div>
+        <!-- Prominent Pending Lent & Pending Borrowed Cards -->
+        <div class="pending-metrics-group">
+          <!-- Pending Lent -->
+          <div class="pending-metric-card lent-card">
+            <div class="pending-metric-header">
+              <div class="pending-icon-dot lent-dot">💸</div>
+              <span class="pending-metric-label">Pending Lent</span>
+            </div>
+            <div class="pending-metric-value text-success">
+              {{ formatCurrency(stats.lending.pending) }}
+            </div>
+            <div class="pending-metric-caption">
+              <span>Money to receive</span>
+            </div>
+          </div>
 
-      <div class="balance-footer-row">
-        <div class="health-indicator" [ngClass]="stats.netBalance >= 0 ? 'health-good' : 'health-caution'">
-          <span class="health-dot"></span>
-          @if (stats.netBalance >= 0) {
-            <span>Positive Cashflow & Lending Margin</span>
-          } @else {
-            <span>Borrowing Outweighs Lending</span>
-          }
-        </div>
-        <div class="balance-sub-details">
-          <span>Pending Lent: {{ formatCurrency(stats.lending.pending) }}</span>
-          <span class="sep">•</span>
-          <span>Pending Borrowed: {{ formatCurrency(stats.borrowing.pending) }}</span>
+          <!-- Pending Borrowed -->
+          <div class="pending-metric-card borrowed-card">
+            <div class="pending-metric-header">
+              <div class="pending-icon-dot borrowed-dot">💳</div>
+              <span class="pending-metric-label">Pending Borrowed</span>
+            </div>
+            <div class="pending-metric-value text-danger">
+              {{ formatCurrency(stats.borrowing.pending) }}
+            </div>
+            <div class="pending-metric-caption">
+              <span>Money to repay</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
