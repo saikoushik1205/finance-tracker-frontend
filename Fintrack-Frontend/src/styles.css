@@ -898,3 +898,21 @@ label {
   flex-shrink: 0;
   color: var(--primary-light, #818cf8);
 }
+
+/* ============================================
+   PARTIAL PAYMENTS STYLING
+   ============================================ */
+.summary-icon.partial {
+  background: rgba(59, 130, 246, 0.2) !important;
+  color: #60a5fa !important;
+}
+
+.status-badge.partial {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #60a5fa !important;
+  border: 1px solid rgba(59, 130, 246, 0.35) !important;
+}
+
+.text-info {
+  color: #60a5fa !important;
+}

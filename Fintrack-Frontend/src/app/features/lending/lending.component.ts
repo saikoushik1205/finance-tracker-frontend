@@ -543,4 +543,8 @@ export class LendingComponent implements OnInit {
   getTotalCompleted(): number {
     return aggregatePersons(this.persons).completed;
   }
+
+  getTotalPartial(): number {
+    return aggregatePersons(this.persons).partial;
+  }
 }

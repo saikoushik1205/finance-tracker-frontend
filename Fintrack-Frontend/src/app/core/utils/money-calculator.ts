@@ -39,7 +39,10 @@ export function formatCurrency(
 
 /**
  * Calculates person/ledger statistics from their transactions.
- * Strict Invariant Enforced: Pending === Total - Completed (Returned)
+ * Strict separation:
+ * - Returned (completed): Only fully completed/returned transactions
+ * - Partial: Dedicated section for partial repayments
+ * - Pending: Remaining balance (Total - Completed - Partial)
  */
 export function calculatePersonStats(transactions: Transaction[] = []): PersonStats {
   if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
@@ -47,6 +50,7 @@ export function calculatePersonStats(transactions: Transaction[] = []): PersonSt
       transactionCount: 0,
       total: 0,
       completed: 0,
+      partial: 0,
       pending: 0,
     };
   }
@@ -58,6 +62,7 @@ export function calculatePersonStats(transactions: Transaction[] = []): PersonSt
       transactionCount: 0,
       total: 0,
       completed: 0,
+      partial: 0,
       pending: 0,
     };
   }
@@ -80,111 +85,93 @@ export function calculatePersonStats(transactions: Transaction[] = []): PersonSt
     }
   }
 
-  let completedPaise = explicitCompletedPaise + partialPaise;
-  let pendingPaise = explicitPendingPaise;
-
-  // Strict invariant: Pending = Total - Completed
-  if (totalPaise > 0) {
-    if (completedPaise === 0 && pendingPaise > 0 && pendingPaise < totalPaise) {
-      // Reconcile missing returned amount
-      completedPaise = totalPaise - pendingPaise;
-    } else {
-      pendingPaise = Math.max(0, totalPaise - completedPaise);
-    }
-  } else {
-    completedPaise = 0;
-    pendingPaise = 0;
-  }
+  const pendingPaise = Math.max(0, totalPaise - explicitCompletedPaise - partialPaise);
 
   return {
     transactionCount: activeTransactions.length,
     total: fromPaise(totalPaise),
-    completed: fromPaise(completedPaise),
+    completed: fromPaise(explicitCompletedPaise),
+    partial: fromPaise(partialPaise),
     pending: fromPaise(pendingPaise),
   };
 }
 
 /**
- * Reconciles an existing PersonStats object (e.g. from backend response)
- * to strictly enforce: Pending === Total - Completed.
+ * Reconciles an existing PersonStats object from backend.
+ * Keeps Partial strictly separate from Completed.
  */
 export function reconcilePersonStats(stats?: PersonStats): PersonStats {
   if (!stats) {
-    return { transactionCount: 0, total: 0, completed: 0, pending: 0 };
+    return { transactionCount: 0, total: 0, completed: 0, partial: 0, pending: 0 };
   }
 
   const totalPaise = toPaise(stats.total);
-  let completedPaise = toPaise(stats.completed);
-  let pendingPaise = toPaise(stats.pending);
+  const completedPaise = toPaise(stats.completed);
+  const partialPaise = toPaise(stats.partial || 0);
 
-  if (totalPaise > 0) {
-    if (completedPaise === 0 && pendingPaise > 0 && pendingPaise < totalPaise) {
-      completedPaise = totalPaise - pendingPaise;
-    } else {
-      pendingPaise = Math.max(0, totalPaise - completedPaise);
-    }
-  } else {
-    completedPaise = 0;
-    pendingPaise = 0;
-  }
+  const pendingPaise = Math.max(0, totalPaise - completedPaise - partialPaise);
 
   return {
     transactionCount: stats.transactionCount || 0,
     total: fromPaise(totalPaise),
     completed: fromPaise(completedPaise),
+    partial: fromPaise(partialPaise),
     pending: fromPaise(pendingPaise),
   };
 }
 
 /**
- * Aggregates summary totals across a list of persons.
- * Invariant Enforced: Total === Completed (Returned) + Pending
+ * Aggregates summary totals across a list of persons:
+ * Total = Completed (Returned) + Partial + Pending
  */
 export function aggregatePersons(persons: Person[] = []): {
   total: number;
   completed: number;
+  partial: number;
   pending: number;
 } {
   if (!persons || !Array.isArray(persons) || persons.length === 0) {
-    return { total: 0, completed: 0, pending: 0 };
+    return { total: 0, completed: 0, partial: 0, pending: 0 };
   }
 
   let totalPaise = 0;
   let completedPaise = 0;
+  let partialPaise = 0;
 
   for (const p of persons) {
     const stats = reconcilePersonStats(p.stats);
     totalPaise += toPaise(stats.total);
     completedPaise += toPaise(stats.completed);
+    partialPaise += toPaise(stats.partial || 0);
   }
 
-  const pendingPaise = Math.max(0, totalPaise - completedPaise);
+  const pendingPaise = Math.max(0, totalPaise - completedPaise - partialPaise);
 
   return {
     total: fromPaise(totalPaise),
     completed: fromPaise(completedPaise),
+    partial: fromPaise(partialPaise),
     pending: fromPaise(pendingPaise),
   };
 }
 
 /**
  * Calculates high-level financial metrics for the Dashboard:
- * - Net Receivable: Pending Lent - Pending Borrowed
- * - Cash Position: Liquid funds in Cash + Bank
- * - Net Worth: Cash Position + Total Earnings - Total Expenses + Net Receivable
+ * - Net Balance: Pending Lent - Pending Borrowed
  */
 export function calculateFinancialMetrics(stats: DashboardStats | null | undefined): {
+  netBalance: number;
   netReceivable: number;
   cashPosition: number;
   netWorth: number;
 } {
   if (!stats) {
-    return { netReceivable: 0, cashPosition: 0, netWorth: 0 };
+    return { netBalance: 0, netReceivable: 0, cashPosition: 0, netWorth: 0 };
   }
 
   const pendingLentPaise = toPaise(stats.lending?.pending || 0);
   const pendingBorrowedPaise = toPaise(stats.borrowing?.pending || 0);
-  const netReceivablePaise = pendingLentPaise - pendingBorrowedPaise;
+  const netBalancePaise = pendingLentPaise - pendingBorrowedPaise;
 
   const cashPaise = toPaise(stats.cashBank?.cash || 0);
   const bankPaise = toPaise(stats.cashBank?.bank || 0);
@@ -193,10 +180,11 @@ export function calculateFinancialMetrics(stats: DashboardStats | null | undefin
   const earningsPaise = toPaise(stats.earnings?.completed || 0);
   const expensesPaise = toPaise(stats.expenses?.completed || 0);
 
-  const netWorthPaise = cashPositionPaise + earningsPaise - expensesPaise + netReceivablePaise;
+  const netWorthPaise = cashPositionPaise + earningsPaise - expensesPaise + netBalancePaise;
 
   return {
-    netReceivable: fromPaise(netReceivablePaise),
+    netBalance: fromPaise(netBalancePaise),
+    netReceivable: fromPaise(netBalancePaise),
     cashPosition: fromPaise(cashPositionPaise),
     netWorth: fromPaise(netWorthPaise),
   };

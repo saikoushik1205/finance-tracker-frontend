@@ -33,6 +33,17 @@
         </p>
       </div>
     </div>
+    @if (getTotalPartial() > 0) {
+    <div class="summary-card glass-card">
+      <div class="summary-icon partial">⚡</div>
+      <div class="summary-content">
+        <p class="summary-label">Partial</p>
+        <p class="summary-value text-info">
+          {{ formatCurrency(getTotalPartial()) }}
+        </p>
+      </div>
+    </div>
+    }
     <div class="summary-card glass-card">
       <div class="summary-icon pending"></div>
       <div class="summary-content">

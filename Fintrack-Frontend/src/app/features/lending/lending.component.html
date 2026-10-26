@@ -33,6 +33,17 @@
         </p>
       </div>
     </div>
+    @if (getTotalPartial() > 0) {
+    <div class="summary-card glass-card">
+      <div class="summary-icon partial">⚡</div>
+      <div class="summary-content">
+        <p class="summary-label">Partial</p>
+        <p class="summary-value text-info">
+          {{ formatCurrency(getTotalPartial()) }}
+        </p>
+      </div>
+    </div>
+    }
     <div class="summary-card glass-card">
       <div class="summary-icon pending">⏳</div>
       <div class="summary-content">
@@ -92,6 +103,14 @@
             formatCurrency(person.stats?.completed || 0)
           }}</span>
         </div>
+        @if ((person.stats?.partial || 0) > 0) {
+        <div class="stat-item">
+          <span class="stat-label">Partial</span>
+          <span class="stat-value text-info">{{
+            formatCurrency(person.stats?.partial || 0)
+          }}</span>
+        </div>
+        }
         <div class="stat-item">
           <span class="stat-label">Pending</span>
           <span class="stat-value text-warning">{{
@@ -384,6 +403,14 @@
             formatCurrency(selectedPerson.stats?.completed || 0)
           }}</span>
         </div>
+        @if ((selectedPerson.stats?.partial || 0) > 0) {
+        <div class="detail-stat">
+          <span class="label">Partial</span>
+          <span class="value text-info">{{
+            formatCurrency(selectedPerson.stats?.partial || 0)
+          }}</span>
+        </div>
+        }
         <div class="detail-stat">
           <span class="label">Pending</span>
           <span class="value text-warning">{{
