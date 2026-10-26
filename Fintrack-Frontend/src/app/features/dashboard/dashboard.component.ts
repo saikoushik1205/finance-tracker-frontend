@@ -5,6 +5,7 @@ import { NavbarComponent } from "../../shared/components/navbar/navbar.component
 import { ApiService } from "../../core/services/api.service";
 import { AuthService } from "../../core/services/auth.service";
 import { DashboardStats } from "../../models/app.models";
+import { formatCurrency as formatMoney, calculateFinancialMetrics } from "../../core/utils/money-calculator";
 import { filter } from "rxjs/operators";
 
 @Component({
@@ -20,6 +21,7 @@ export class DashboardComponent implements OnInit {
   error = "";
   userName = "";
   hasInterestAccess = false;
+  financialMetrics = { netReceivable: 0, cashPosition: 0, netWorth: 0 };
 
   constructor(
     private apiService: ApiService,
@@ -62,6 +64,7 @@ export class DashboardComponent implements OnInit {
       next: (response: any) => {
         if (response.success) {
           this.stats = response.stats;
+          this.financialMetrics = calculateFinancialMetrics(this.stats);
         }
         this.loading = false;
       },
@@ -74,12 +77,20 @@ export class DashboardComponent implements OnInit {
   }
 
   formatCurrency(amount: number): string {
-    return "₹" + amount.toLocaleString("en-IN");
+    return formatMoney(amount);
+  }
+
+  getNetReceivableClass(): string {
+    return this.financialMetrics.netReceivable >= 0 ? "text-success" : "text-danger";
+  }
+
+  getNetWorthClass(): string {
+    return this.financialMetrics.netWorth >= 0 ? "text-success" : "text-danger";
   }
 
   getNetBalanceClass(): string {
     if (!this.stats) return "";
-    return this.stats.netBalance >= 0 ? "text-success" : "text-danger";
+    return this.getNetReceivableClass();
   }
 
   getActivePeopleCount(): number {

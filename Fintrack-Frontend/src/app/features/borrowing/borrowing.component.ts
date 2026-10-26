@@ -7,6 +7,7 @@ import { ApiService } from "../../core/services/api.service";
 import { AuthService } from "../../core/services/auth.service";
 import { PdfService } from "../../core/services/pdf.service";
 import { Person, Transaction } from "../../models/app.models";
+import { formatCurrency as formatMoney, reconcilePersonStats, aggregatePersons } from "../../core/utils/money-calculator";
 
 @Component({
   selector: "app-borrowing",
@@ -79,7 +80,7 @@ export class BorrowingComponent implements OnInit {
     this.apiService.getPersonsBySection("borrowing").subscribe({
       next: (response: any) => {
         if (response.success) {
-          this.persons = response.persons;
+          this.persons = (response.persons || []).map((p: Person) => ({ ...p, stats: reconcilePersonStats(p.stats) }));
         }
         this.loading = false;
       },
@@ -519,7 +520,7 @@ export class BorrowingComponent implements OnInit {
   }
 
   formatCurrency(amount: number): string {
-    return "₹" + amount.toLocaleString("en-IN");
+    return formatMoney(amount);
   }
 
   formatDate(date: Date): string {
@@ -527,14 +528,14 @@ export class BorrowingComponent implements OnInit {
   }
 
   getTotalAmount(): number {
-    return this.persons.reduce((sum, p) => sum + (p.stats?.total || 0), 0);
+    return aggregatePersons(this.persons).total;
   }
 
   getTotalPending(): number {
-    return this.persons.reduce((sum, p) => sum + (p.stats?.pending || 0), 0);
+    return aggregatePersons(this.persons).pending;
   }
 
   getTotalCompleted(): number {
-    return this.persons.reduce((sum, p) => sum + (p.stats?.completed || 0), 0);
+    return aggregatePersons(this.persons).completed;
   }
 }

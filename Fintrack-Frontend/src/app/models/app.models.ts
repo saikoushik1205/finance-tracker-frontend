@@ -71,12 +71,23 @@ export interface DashboardStats {
   interest: SectionStats;
   cashBank: CashBank;
   netBalance: number;
+  netReceivable?: number;
+  cashPosition?: number;
+  netWorth?: number;
   summary: {
     totalIncome: number;
     totalExpenses: number;
     totalLent: number;
     totalBorrowed: number;
     availableCash: number;
+    pendingLent?: number;
+    pendingBorrowed?: number;
+    returnedLent?: number;
+    returnedBorrowed?: number;
+    totalEarnings?: number;
+    netReceivable?: number;
+    cashPosition?: number;
+    netWorth?: number;
   };
 }
 

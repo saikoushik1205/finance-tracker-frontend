@@ -570,3 +570,122 @@
     gap: 0.35rem;
   }
 }
+
+/* ========================================================
+   HERO METRICS CONTAINER & TOOLTIP ENHANCEMENTS
+   ======================================================== */
+.hero-metrics-container {
+  display: flex;
+  align-items: stretch;
+  gap: 1.5rem;
+  flex: 1;
+  min-width: 320px;
+}
+
+.hero-divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0.25rem 0;
+}
+
+.net-worth-block {
+  padding-left: 0.25rem;
+}
+
+.net-worth-badge {
+  color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.12) !important;
+  border-color: rgba(56, 189, 248, 0.25) !important;
+}
+
+.balance-amount-secondary {
+  font-size: clamp(1.8rem, 2.6vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.cash-position-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  margin-top: 0.35rem;
+}
+
+.cash-position-pill .pill-label {
+  color: var(--text-tertiary);
+}
+
+.cash-position-pill .pill-value {
+  color: #f8fafc;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tooltip UI */
+.metric-info-tooltip {
+  cursor: help;
+  font-size: 0.78rem;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.25rem;
+  opacity: 0.8;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.metric-info-tooltip:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.metric-info-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.96);
+  color: #f1f5f9;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  width: max-content;
+  max-width: 280px;
+  white-space: normal;
+  z-index: 999;
+}
+
+.metric-info-tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-3px);
+}
+
+@media (max-width: 992px) {
+  .hero-metrics-container {
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .hero-divider {
+    display: none;
+  }
+  .net-worth-block {
+    padding-left: 0;
+  }
+}

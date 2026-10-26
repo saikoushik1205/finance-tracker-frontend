@@ -41,33 +41,68 @@
     </button>
   </div>
   } @else if (stats) {
-  <!-- Hero Section: Net Balance & Quick Health -->
+  <!-- Hero Section: Net Financial Position, Net Receivable & Net Worth -->
   <div class="hero-balance-section slide-in">
     <div class="net-balance-card glass-card">
       <div class="balance-card-glow"></div>
       
       <div class="net-balance-grid">
-        <!-- Main Balance Block -->
-        <div class="balance-main-block">
-          <div class="balance-top-row">
-            <span class="balance-badge">Total Position</span>
-            <div class="balance-icon-pill">
-              <span>💰</span>
+        <!-- Main Dual Blocks: Net Receivable & Net Worth -->
+        <div class="hero-metrics-container">
+          <!-- Net Receivable -->
+          <div class="balance-main-block">
+            <div class="balance-top-row">
+              <span class="balance-badge">Lending / Debt</span>
+              <span
+                class="metric-info-tooltip"
+                [attr.data-tooltip]="'Formula: Pending Lent (' + formatCurrency(stats.lending.pending) + ') − Pending Borrowed (' + formatCurrency(stats.borrowing.pending) + '). Net money owed to you.'"
+                aria-label="Net Receivable calculation formula"
+              >ℹ️</span>
+            </div>
+            <h3 class="balance-title">Net Receivable</h3>
+            <div class="balance-figure-row">
+              <div class="balance-amount" [ngClass]="getNetReceivableClass()">
+                {{ formatCurrency(financialMetrics.netReceivable) }}
+              </div>
+            </div>
+            <div class="health-indicator" [ngClass]="financialMetrics.netReceivable >= 0 ? 'health-good' : 'health-caution'">
+              <span class="health-dot"></span>
+              @if (financialMetrics.netReceivable >= 0) {
+                <span>Net Inflow Position (Others owe you more)</span>
+              } @else {
+                <span>Net Debt Position (You owe more than owed)</span>
+              }
             </div>
           </div>
-          <h3 class="balance-title">Net Balance</h3>
-          <div class="balance-figure-row">
-            <div class="balance-amount" [ngClass]="getNetBalanceClass()">
-              {{ formatCurrency(stats.netBalance) }}
+
+          <!-- Divider -->
+          <div class="hero-divider"></div>
+
+          <!-- Estimated Net Worth & Cash Position -->
+          <div class="balance-main-block net-worth-block">
+            <div class="balance-top-row">
+              <span class="balance-badge net-worth-badge">Net Assets</span>
+              <span
+                class="metric-info-tooltip"
+                [attr.data-tooltip]="'Formula: Liquid Cash & Bank (' + formatCurrency(financialMetrics.cashPosition) + ') + Total Earnings (' + formatCurrency(stats.summary.totalIncome || stats.earnings.completed) + ') − Total Expenses (' + formatCurrency(stats.summary.totalExpenses) + ') + Net Receivable (' + formatCurrency(financialMetrics.netReceivable) + ').'"
+                aria-label="Net Worth calculation formula"
+              >ℹ️</span>
             </div>
-          </div>
-          <div class="health-indicator" [ngClass]="stats.netBalance >= 0 ? 'health-good' : 'health-caution'">
-            <span class="health-dot"></span>
-            @if (stats.netBalance >= 0) {
-              <span>Positive Cashflow & Margin</span>
-            } @else {
-              <span>Borrowing Outweighs Lending</span>
-            }
+            <h3 class="balance-title">Estimated Net Worth</h3>
+            <div class="balance-figure-row">
+              <div class="balance-amount-secondary" [ngClass]="getNetWorthClass()">
+                {{ formatCurrency(financialMetrics.netWorth) }}
+              </div>
+            </div>
+            <div class="cash-position-pill">
+              <span class="pill-label">Liquid Cash & Bank:</span>
+              <strong class="pill-value">{{ formatCurrency(financialMetrics.cashPosition) }}</strong>
+              <span
+                class="metric-info-tooltip"
+                [attr.data-tooltip]="'Formula: Cash in Hand (' + formatCurrency(stats.cashBank.cash) + ') + Bank Accounts (' + formatCurrency(stats.cashBank.bank) + '). Readily available funds.'"
+                aria-label="Liquid Cash Position formula"
+              >ℹ️</span>
+            </div>
           </div>
         </div>
 
