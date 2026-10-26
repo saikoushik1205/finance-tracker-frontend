@@ -33,17 +33,6 @@
         </p>
       </div>
     </div>
-    @if (getTotalPartial() > 0) {
-    <div class="summary-card glass-card">
-      <div class="summary-icon partial">⚡</div>
-      <div class="summary-content">
-        <p class="summary-label">Partial</p>
-        <p class="summary-value text-info">
-          {{ formatCurrency(getTotalPartial()) }}
-        </p>
-      </div>
-    </div>
-    }
     <div class="summary-card glass-card">
       <div class="summary-icon pending"></div>
       <div class="summary-content">
@@ -249,7 +238,7 @@
         >
           <option value="completed">Repaid</option>
           <option value="pending">Pending</option>
-          <option value="partial">Partial</option>
+          
         </select>
       </div>
       <div class="form-group">
@@ -321,7 +310,7 @@
         >
           <option value="completed">Repaid</option>
           <option value="pending">Pending</option>
-          <option value="partial">Partial</option>
+          
         </select>
       </div>
       <div class="form-group">
@@ -570,7 +559,7 @@
           [class.active]="settleForm.isFull"
           (click)="setFullSettlement()"
         >
-          <span>✓ Full Settlement</span>
+          <span>✓ Full Balance</span>
           <span class="pill-amount">{{ formatCurrency(settleTargetPerson.stats?.pending || 0) }}</span>
         </button>
         <button
@@ -579,7 +568,7 @@
           [class.active]="!settleForm.isFull"
           (click)="setPartialSettlement()"
         >
-          <span>Partial Settlement</span>
+          <span>Custom Amount</span>
         </button>
       </div>
 

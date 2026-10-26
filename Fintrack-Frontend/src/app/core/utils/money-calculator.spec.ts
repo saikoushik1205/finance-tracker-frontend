@@ -39,50 +39,58 @@ describe("Money Calculator Utility (Frontend)", () => {
     });
   });
 
-  describe("calculatePersonStats with Dedicated Partial Section", () => {
+  describe("calculatePersonStats with Pending and Completed", () => {
     it("handles zero transactions and empty arrays gracefully", () => {
       const result = calculatePersonStats([]);
       expect(result).toEqual({
         transactionCount: 0,
         total: 0,
         completed: 0,
-        partial: 0,
         pending: 0,
       });
+      expect(result.pending).toBe(result.total - result.completed);
     });
 
-    it("keeps partial transactions strictly separated from returned transactions", () => {
-      // In Lent Section: Don't add partial payments into returned; keep a separate section for partial
+    it("handles single pending transaction", () => {
       const txs: Transaction[] = [
         {
           _id: "1",
           personId: "p1",
           userId: "u1",
           date: new Date(),
-          amount: 1540,
+          amount: 5000,
           remarks: "pending loan",
           status: "pending",
           createdAt: new Date(),
           updatedAt: new Date(),
         },
+      ];
+      const result = calculatePersonStats(txs);
+      expect(result.total).toBe(5000);
+      expect(result.completed).toBe(0);
+      expect(result.pending).toBe(5000);
+      expect(result.pending).toBe(result.total - result.completed);
+    });
+
+    it("handles single completed transaction", () => {
+      const txs: Transaction[] = [
         {
-          _id: "2",
+          _id: "1",
           personId: "p1",
           userId: "u1",
           date: new Date(),
-          amount: 1110,
-          remarks: "partial return",
-          status: "partial",
+          amount: 2500,
+          remarks: "returned",
+          status: "completed",
           createdAt: new Date(),
           updatedAt: new Date(),
         },
       ];
       const result = calculatePersonStats(txs);
-      expect(result.total).toBe(2650);
-      expect(result.completed).toBe(0);    // Only fully returned
-      expect(result.partial).toBe(1110);   // Dedicated partial section
-      expect(result.pending).toBe(1540);
-      expect(result.total).toBe(result.completed + result.partial + result.pending);
+      expect(result.total).toBe(2500);
+      expect(result.completed).toBe(2500);
+      expect(result.pending).toBe(0);
+      expect(result.pending).toBe(result.total - result.completed);
     });
 
     it("ignores cancelled transactions", () => {
@@ -115,30 +123,28 @@ describe("Money Calculator Utility (Frontend)", () => {
       expect(result.total).toBe(2000);
       expect(result.pending).toBe(2000);
       expect(result.completed).toBe(0);
-      expect(result.partial).toBe(0);
     });
   });
 
   describe("reconcilePersonStats & aggregatePersons", () => {
-    it("aggregates persons while keeping partial separated", () => {
+    it("aggregates persons strictly using Total = Completed + Pending", () => {
       const persons: Partial<Person>[] = [
         {
           _id: "p1",
           name: "Person 1",
-          stats: { transactionCount: 2, total: 2650, pending: 1540, completed: 0, partial: 1110 },
+          stats: { transactionCount: 2, total: 2650, pending: 1540, completed: 1110 },
         },
         {
           _id: "p2",
           name: "Person 2",
-          stats: { transactionCount: 5, total: 99109, pending: 94609, completed: 4500, partial: 0 },
+          stats: { transactionCount: 5, total: 99109, pending: 94609, completed: 4500 },
         },
       ];
       const agg = aggregatePersons(persons as Person[]);
       expect(agg.total).toBe(101759);
-      expect(agg.completed).toBe(4500); // strictly returned
-      expect(agg.partial).toBe(1110);   // strictly partial
-      expect(agg.pending).toBe(96149);   // strictly pending
-      expect(agg.total).toBe(agg.completed + agg.partial + agg.pending);
+      expect(agg.completed).toBe(5610);
+      expect(agg.pending).toBe(96149);
+      expect(agg.pending).toBe(agg.total - agg.completed);
     });
   });
 
@@ -153,7 +159,6 @@ describe("Money Calculator Utility (Frontend)", () => {
       };
 
       const metrics = calculateFinancialMetrics(mockDashboard as DashboardStats);
-      // Net Balance = 95,723 - 426 = 95,297
       expect(metrics.netBalance).toBe(95297);
     });
   });

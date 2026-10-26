@@ -29,7 +29,6 @@ export interface PersonStats {
   total: number;
   pending: number;
   completed: number;
-  partial?: number;
 }
 
 export interface Transaction {
@@ -96,7 +95,6 @@ export interface SectionStats {
   total: number;
   pending: number;
   completed: number;
-  partial?: number;
 }
 
 export type SectionType =
@@ -105,11 +103,7 @@ export type SectionType =
   | "earnings"
   | "expenses"
   | "interest";
-export type TransactionStatus =
-  | "pending"
-  | "completed"
-  | "partial"
-  | "cancelled";
+export type TransactionStatus = "pending" | "completed" | "cancelled";
 
 export interface ApiResponse<T> {
   success: boolean;

@@ -3,6 +3,7 @@ import { Person, PersonStats, Transaction, DashboardStats } from "../../models/a
 /**
  * Centralized Money Calculation Utility for FinTrack
  * All arithmetic uses integer paise (1 Rupee = 100 Paise) to avoid floating-point errors.
+ * Supported transaction statuses: Pending and Completed (Returned).
  */
 
 /**
@@ -39,10 +40,7 @@ export function formatCurrency(
 
 /**
  * Calculates person/ledger statistics from their transactions.
- * Strict separation:
- * - Returned (completed): Only fully completed/returned transactions
- * - Partial: Dedicated section for partial repayments
- * - Pending: Remaining balance (Total - Completed - Partial)
+ * Strict Invariant: Pending === Total - Completed (Returned)
  */
 export function calculatePersonStats(transactions: Transaction[] = []): PersonStats {
   if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
@@ -50,7 +48,6 @@ export function calculatePersonStats(transactions: Transaction[] = []): PersonSt
       transactionCount: 0,
       total: 0,
       completed: 0,
-      partial: 0,
       pending: 0,
     };
   }
@@ -62,95 +59,104 @@ export function calculatePersonStats(transactions: Transaction[] = []): PersonSt
       transactionCount: 0,
       total: 0,
       completed: 0,
-      partial: 0,
       pending: 0,
     };
   }
 
   let totalPaise = 0;
-  let explicitCompletedPaise = 0;
-  let explicitPendingPaise = 0;
-  let partialPaise = 0;
+  let completedPaise = 0;
+  let pendingPaise = 0;
 
   for (const t of activeTransactions) {
     const amtPaise = toPaise(t.amount);
     totalPaise += amtPaise;
 
-    if (t.status === "completed") {
-      explicitCompletedPaise += amtPaise;
+    if (t.status === "completed" || (t.status as string) === "partial") {
+      completedPaise += amtPaise;
     } else if (t.status === "pending") {
-      explicitPendingPaise += amtPaise;
-    } else if (t.status === "partial") {
-      partialPaise += amtPaise;
+      pendingPaise += amtPaise;
     }
   }
 
-  const pendingPaise = Math.max(0, totalPaise - explicitCompletedPaise - partialPaise);
+  // Strict invariant: Pending = Total - Completed
+  if (totalPaise > 0) {
+    if (completedPaise === 0 && pendingPaise > 0 && pendingPaise < totalPaise) {
+      completedPaise = totalPaise - pendingPaise;
+    } else {
+      pendingPaise = Math.max(0, totalPaise - completedPaise);
+    }
+  } else {
+    completedPaise = 0;
+    pendingPaise = 0;
+  }
 
   return {
     transactionCount: activeTransactions.length,
     total: fromPaise(totalPaise),
-    completed: fromPaise(explicitCompletedPaise),
-    partial: fromPaise(partialPaise),
+    completed: fromPaise(completedPaise),
     pending: fromPaise(pendingPaise),
   };
 }
 
 /**
  * Reconciles an existing PersonStats object from backend.
- * Keeps Partial strictly separate from Completed.
+ * Strict Invariant: Pending === Total - Completed
  */
 export function reconcilePersonStats(stats?: PersonStats): PersonStats {
   if (!stats) {
-    return { transactionCount: 0, total: 0, completed: 0, partial: 0, pending: 0 };
+    return { transactionCount: 0, total: 0, completed: 0, pending: 0 };
   }
 
   const totalPaise = toPaise(stats.total);
-  const completedPaise = toPaise(stats.completed);
-  const partialPaise = toPaise(stats.partial || 0);
+  let completedPaise = toPaise(stats.completed);
+  let pendingPaise = toPaise(stats.pending);
 
-  const pendingPaise = Math.max(0, totalPaise - completedPaise - partialPaise);
+  if (totalPaise > 0) {
+    if (completedPaise === 0 && pendingPaise > 0 && pendingPaise < totalPaise) {
+      completedPaise = totalPaise - pendingPaise;
+    } else {
+      pendingPaise = Math.max(0, totalPaise - completedPaise);
+    }
+  } else {
+    completedPaise = 0;
+    pendingPaise = 0;
+  }
 
   return {
     transactionCount: stats.transactionCount || 0,
     total: fromPaise(totalPaise),
     completed: fromPaise(completedPaise),
-    partial: fromPaise(partialPaise),
     pending: fromPaise(pendingPaise),
   };
 }
 
 /**
  * Aggregates summary totals across a list of persons:
- * Total = Completed (Returned) + Partial + Pending
+ * Total === Completed + Pending
  */
 export function aggregatePersons(persons: Person[] = []): {
   total: number;
   completed: number;
-  partial: number;
   pending: number;
 } {
   if (!persons || !Array.isArray(persons) || persons.length === 0) {
-    return { total: 0, completed: 0, partial: 0, pending: 0 };
+    return { total: 0, completed: 0, pending: 0 };
   }
 
   let totalPaise = 0;
   let completedPaise = 0;
-  let partialPaise = 0;
 
   for (const p of persons) {
     const stats = reconcilePersonStats(p.stats);
     totalPaise += toPaise(stats.total);
     completedPaise += toPaise(stats.completed);
-    partialPaise += toPaise(stats.partial || 0);
   }
 
-  const pendingPaise = Math.max(0, totalPaise - completedPaise - partialPaise);
+  const pendingPaise = Math.max(0, totalPaise - completedPaise);
 
   return {
     total: fromPaise(totalPaise),
     completed: fromPaise(completedPaise),
-    partial: fromPaise(partialPaise),
     pending: fromPaise(pendingPaise),
   };
 }
