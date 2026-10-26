@@ -119,6 +119,14 @@
         >
           Add Transaction
         </button>
+        @if ((person.stats?.pending || 0) > 0) {
+        <button
+          class="btn btn-success btn-sm btn-settle"
+          (click)="openSettleModal(person)"
+        >
+          🤝 Settle Up
+        </button>
+        }
         <button class="btn btn-secondary btn-sm" (click)="generatePDF(person)">
           📄 PDF
         </button>
@@ -391,6 +399,14 @@
         >
           ➕ Add Transaction
         </button>
+        @if ((selectedPerson?.stats?.pending || 0) > 0) {
+        <button
+          class="btn btn-success btn-settle"
+          (click)="openSettleModal(selectedPerson!)"
+        >
+          🤝 Settle Up
+        </button>
+        }
         <button
           class="btn btn-secondary"
           (click)="generatePDF(selectedPerson!)"
@@ -509,6 +525,133 @@
           Cancel
         </button>
         <button type="submit" class="btn btn-primary">Update Person</button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+
+<!-- Settle Up Modal -->
+@if (showSettleModal && settleTargetPerson) {
+<div class="modal-backdrop" (click)="closeSettleModal()">
+  <div class="modal glass-card settle-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <span class="modal-badge-settle">Payment Settlement</span>
+        <h2>Settle Up — {{ settleTargetPerson.name }}</h2>
+      </div>
+      <button class="close-btn" (click)="closeSettleModal()">✕</button>
+    </div>
+
+    <form (ngSubmit)="confirmSettlement()">
+      <div class="settle-balance-box">
+        <div class="settle-box-item">
+          <span class="settle-box-label">Current Pending Balance</span>
+          <span class="settle-box-val text-warning">{{ formatCurrency(settleTargetPerson.stats?.pending || 0) }}</span>
+        </div>
+      </div>
+
+      <div class="settle-type-selector">
+        <button
+          type="button"
+          class="settle-pill-btn"
+          [class.active]="settleForm.isFull"
+          (click)="setFullSettlement()"
+        >
+          <span>✓ Full Settlement</span>
+          <span class="pill-amount">{{ formatCurrency(settleTargetPerson.stats?.pending || 0) }}</span>
+        </button>
+        <button
+          type="button"
+          class="settle-pill-btn"
+          [class.active]="!settleForm.isFull"
+          (click)="setPartialSettlement()"
+        >
+          <span>Partial Settlement</span>
+        </button>
+      </div>
+
+      <div class="form-group">
+        <label for="settleAmount">Settlement Amount (₹)</label>
+        <input
+          type="number"
+          id="settleAmount"
+          class="form-control settle-amount-input"
+          [(ngModel)]="settleForm.amount"
+          name="amount"
+          min="1"
+          [max]="settleTargetPerson.stats?.pending || 0"
+          required
+        />
+        <div class="settle-calc-preview">
+          <span>Remaining pending after this: </span>
+          <strong [class.text-success]="(settleTargetPerson.stats?.pending || 0) - settleForm.amount <= 0" [class.text-warning]="(settleTargetPerson.stats?.pending || 0) - settleForm.amount > 0">
+            {{ formatCurrency(mathMax(0, (settleTargetPerson.stats?.pending || 0) - settleForm.amount)) }}
+          </strong>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="settleDate">Payment Date</label>
+        <input
+          type="date"
+          id="settleDate"
+          class="form-control"
+          [(ngModel)]="settleForm.date"
+          name="date"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="settleMethod">Payment Mode / Method</label>
+        <select
+          id="settleMethod"
+          class="form-control"
+          [(ngModel)]="settleForm.paymentMethod"
+          name="paymentMethod"
+        >
+          <option value="UPI / Online">UPI / GPay / PhonePe / Paytm</option>
+          <option value="Cash">Cash in Hand</option>
+          <option value="Bank Transfer">Bank Transfer (NEFT/IMPS/RTGS)</option>
+          <option value="Cheque">Cheque</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="settleRemarks">Notes / Transaction Reference (Optional)</label>
+        <textarea
+          id="settleRemarks"
+          class="form-control"
+          [(ngModel)]="settleForm.remarks"
+          name="remarks"
+          rows="2"
+          placeholder="e.g. UPI Ref #1234 / Handed cash"
+        ></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeSettleModal()"
+          [disabled]="settling"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn btn-success btn-settle-confirm"
+          [disabled]="settling || settleForm.amount <= 0 || settleForm.amount > (settleTargetPerson.stats?.pending || 0)"
+        >
+          @if (settling) {
+            <span>Processing Settlement...</span>
+          } @else {
+            <span>🤝 Confirm Settlement {{ formatCurrency(settleForm.amount) }}</span>
+          }
+        </button>
       </div>
     </form>
   </div>

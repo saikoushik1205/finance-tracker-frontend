@@ -1,6 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
+import { lastValueFrom } from "rxjs";
 import { NavbarComponent } from "../../shared/components/navbar/navbar.component";
 import { ApiService } from "../../core/services/api.service";
 import { AuthService } from "../../core/services/auth.service";
@@ -27,6 +28,18 @@ export class LendingComponent implements OnInit {
   isEditMode = false;
   editingTransactionId: string | null = null;
   editingPersonId: string | null = null;
+
+  // Settlement State
+  showSettleModal = false;
+  settleTargetPerson: Person | null = null;
+  settling = false;
+  settleForm = {
+    amount: 0,
+    date: new Date().toISOString().split("T")[0],
+    paymentMethod: "UPI / Online",
+    remarks: "",
+    isFull: true,
+  };
 
   // Form models
   personForm = {
@@ -324,6 +337,169 @@ export class LendingComponent implements OnInit {
       },
       error: (error) => {
         alert("Failed to delete person");
+      },
+    });
+  }
+
+  // Settlement Handlers
+  openSettleModal(person: Person): void {
+    this.settleTargetPerson = person;
+    const pending = person.stats?.pending || 0;
+    this.settleForm = {
+      amount: pending,
+      date: new Date().toISOString().split("T")[0],
+      paymentMethod: "UPI / Online",
+      remarks: "",
+      isFull: true,
+    };
+    this.showSettleModal = true;
+  }
+
+  closeSettleModal(): void {
+    this.showSettleModal = false;
+    this.settleTargetPerson = null;
+    this.settling = false;
+  }
+
+  setFullSettlement(): void {
+    if (!this.settleTargetPerson) return;
+    this.settleForm.isFull = true;
+    this.settleForm.amount = this.settleTargetPerson.stats?.pending || 0;
+  }
+
+  setPartialSettlement(): void {
+    this.settleForm.isFull = false;
+  }
+
+  mathMax(a: number, b: number): number {
+    return Math.max(a, b);
+  }
+
+  confirmSettlement(): void {
+    if (!this.settleTargetPerson) return;
+    const pending = this.settleTargetPerson.stats?.pending || 0;
+    const amountToSettle = Number(this.settleForm.amount);
+
+    if (amountToSettle <= 0) {
+      alert("Please enter a valid settlement amount greater than 0");
+      return;
+    }
+    if (amountToSettle > pending) {
+      alert(
+        `Settlement amount (${this.formatCurrency(amountToSettle)}) cannot exceed current pending balance (${this.formatCurrency(pending)})`
+      );
+      return;
+    }
+
+    this.settling = true;
+    const personId = this.settleTargetPerson._id;
+    const defaultNote = `Settlement received: ${this.formatCurrency(amountToSettle)} via ${this.settleForm.paymentMethod}`;
+    const finalRemarks = this.settleForm.remarks.trim()
+      ? `${defaultNote} - ${this.settleForm.remarks.trim()}`
+      : defaultNote;
+
+    this.apiService.getTransactionsByPerson(personId).subscribe({
+      next: async (response: any) => {
+        if (!response.success) {
+          alert("Failed to retrieve transactions for settlement");
+          this.settling = false;
+          return;
+        }
+
+        const allTx: Transaction[] = response.transactions || [];
+        const pendingTx = allTx
+          .filter((t) => t.status === "pending")
+          .sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          );
+
+        let remainingToAllocate = amountToSettle;
+        const updatePromises: Promise<any>[] = [];
+
+        for (const tx of pendingTx) {
+          if (remainingToAllocate <= 0) break;
+
+          if (remainingToAllocate >= tx.amount) {
+            remainingToAllocate -= tx.amount;
+            const updatedRemarks = tx.remarks
+              ? `${tx.remarks} | Settled via ${this.settleForm.paymentMethod}`
+              : `Settled via ${this.settleForm.paymentMethod}`;
+
+            updatePromises.push(
+              lastValueFrom(
+                this.apiService.updateTransaction(tx._id, {
+                  status: "completed",
+                  remarks: updatedRemarks,
+                })
+              )
+            );
+          } else {
+            const partialSettleAmount = remainingToAllocate;
+            const remainingTxAmount = tx.amount - partialSettleAmount;
+            remainingToAllocate = 0;
+
+            updatePromises.push(
+              lastValueFrom(
+                this.apiService.updateTransaction(tx._id, {
+                  amount: remainingTxAmount,
+                  status: "pending",
+                  remarks: tx.remarks
+                    ? `${tx.remarks} (Remaining pending after partial settlement)`
+                    : "Remaining pending after partial settlement",
+                })
+              )
+            );
+
+            updatePromises.push(
+              lastValueFrom(
+                this.apiService.createTransaction({
+                  personId: personId,
+                  date: new Date(this.settleForm.date),
+                  amount: partialSettleAmount,
+                  status: "completed",
+                  remarks: finalRemarks,
+                })
+              )
+            );
+          }
+        }
+
+        if (pendingTx.length === 0 && remainingToAllocate > 0) {
+          updatePromises.push(
+            lastValueFrom(
+              this.apiService.createTransaction({
+                personId: personId,
+                date: new Date(this.settleForm.date),
+                amount: remainingToAllocate,
+                status: "completed",
+                remarks: finalRemarks,
+              })
+            )
+          );
+        }
+
+        try {
+          await Promise.all(updatePromises);
+          this.settling = false;
+          this.closeSettleModal();
+          this.loadPersons();
+          if (
+            this.showPersonDetailsModal &&
+            this.selectedPerson?._id === personId
+          ) {
+            this.loadPersonTransactions(personId);
+          }
+        } catch (err: any) {
+          console.error("Settlement error:", err);
+          alert(err.message || "Failed to complete settlement");
+          this.settling = false;
+          this.loadPersons();
+        }
+      },
+      error: (err) => {
+        console.error("Error in settlement:", err);
+        alert("Failed to process settlement");
+        this.settling = false;
       },
     });
   }

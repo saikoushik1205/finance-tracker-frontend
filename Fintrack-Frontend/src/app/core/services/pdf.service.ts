@@ -64,41 +64,59 @@ export class PdfService {
       .filter((t) => t.status === "pending")
       .reduce((sum, t) => sum + t.amount, 0);
 
+    const isLending = sectionType === "lending";
+    const totalLabel = isLending ? "Total Lent:" : "Total Borrowed:";
+    const settledLabel = isLending ? "Settled (Returned):" : "Settled (Repaid):";
+    const pendingLabel = isLending ? "Pending to Receive:" : "Pending to Repay:";
+
     // Summary Section
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(79, 70, 229);
-    doc.text("Summary", 20, yPos);
+    doc.text("Financial Summary & Settlement Status", 20, yPos);
     yPos += 8;
 
     // Summary Box
     doc.setFillColor(245, 245, 250);
-    doc.rect(20, yPos - 5, pageWidth - 40, 25, "F");
+    doc.rect(20, yPos - 5, pageWidth - 40, 32, "F");
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(0, 0, 0);
 
     // Total Amount
-    doc.text("Total Amount:", 25, yPos);
+    doc.text(totalLabel, 25, yPos);
     doc.setFont("helvetica", "bold");
-    doc.text(`Rs. ${totalAmount.toLocaleString("en-IN")}`, 70, yPos);
+    doc.text(`Rs. ${totalAmount.toLocaleString("en-IN")}`, 85, yPos);
 
-    // Completed Amount
+    // Completed / Settled Amount
     doc.setFont("helvetica", "normal");
     doc.setTextColor(0, 128, 0); // Green color
-    doc.text("Completed:", 25, yPos + 7);
+    doc.text(settledLabel, 25, yPos + 7);
     doc.setFont("helvetica", "bold");
-    doc.text(`Rs. ${completedAmount.toLocaleString("en-IN")}`, 70, yPos + 7);
+    doc.text(`Rs. ${completedAmount.toLocaleString("en-IN")}`, 85, yPos + 7);
 
     // Pending Amount
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(255, 140, 0); // Orange color
-    doc.text("Pending:", 25, yPos + 14);
+    doc.setTextColor(pendingAmount > 0 ? 220 : 0, pendingAmount > 0 ? 38 : 128, pendingAmount > 0 ? 38 : 0);
+    doc.text(pendingLabel, 25, yPos + 14);
     doc.setFont("helvetica", "bold");
-    doc.text(`Rs. ${pendingAmount.toLocaleString("en-IN")}`, 70, yPos + 14);
+    doc.text(`Rs. ${pendingAmount.toLocaleString("en-IN")}`, 85, yPos + 14);
 
-    yPos += 30;
+    // Settlement Status Banner
+    doc.setFontSize(9);
+    if (pendingAmount === 0 && totalAmount > 0) {
+      doc.setTextColor(0, 128, 0);
+      doc.text("Account Status: FULLY SETTLED (NO PENDING DUES)", 25, yPos + 22);
+    } else if (completedAmount > 0 && pendingAmount > 0) {
+      doc.setTextColor(217, 119, 6);
+      doc.text(`Account Status: PARTIALLY SETTLED (Rs. ${pendingAmount.toLocaleString("en-IN")} pending)`, 25, yPos + 22);
+    } else {
+      doc.setTextColor(220, 38, 38);
+      doc.text("Account Status: PAYMENT PENDING", 25, yPos + 22);
+    }
+
+    yPos += 38;
 
     // Reset text color
     doc.setTextColor(0, 0, 0);
@@ -107,19 +125,25 @@ export class PdfService {
     if (transactions.length > 0) {
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text("Transaction History", 20, yPos);
+      doc.text("Transaction & Settlement History", 20, yPos);
       yPos += 8;
 
-      const tableData = transactions.map((t) => [
-        new Date(t.date).toLocaleDateString("en-IN"),
-        `Rs. ${t.amount.toLocaleString("en-IN")}`,
-        t.status.charAt(0).toUpperCase() + t.status.slice(1),
-        t.remarks || "-",
-      ]);
+      const tableData = transactions.map((t) => {
+        let statusDisplay = t.status.charAt(0).toUpperCase() + t.status.slice(1);
+        if (t.status === "completed") {
+          statusDisplay = isLending ? "Settled (Returned)" : "Settled (Repaid)";
+        }
+        return [
+          new Date(t.date).toLocaleDateString("en-IN"),
+          `Rs. ${t.amount.toLocaleString("en-IN")}`,
+          statusDisplay,
+          t.remarks || "-",
+        ];
+      });
 
       autoTable(doc, {
         startY: yPos,
-        head: [["Date", "Amount", "Status", "Remarks"]],
+        head: [["Date", "Amount", "Status", "Settlement Notes / Remarks"]],
         body: tableData,
         theme: "striped",
         headStyles: {
