@@ -113,12 +113,12 @@
         <span>💸</span>
       </div>
       <div class="stat-content">
-        <span class="stat-category">Lent</span>
+        <span class="stat-category category-lent">Lent</span>
         <div class="stat-value text-success">
           {{ formatCurrency(stats.summary.totalLent) }}
         </div>
         <div class="stat-footnote">
-          <span>Pending: {{ formatCurrency(stats.lending.pending) }}</span>
+          <span>Pending: <strong class="footnote-lent">{{ formatCurrency(stats.lending.pending) }}</strong></span>
         </div>
       </div>
     </div>
@@ -129,12 +129,12 @@
         <span>💳</span>
       </div>
       <div class="stat-content">
-        <span class="stat-category">Borrowed</span>
+        <span class="stat-category category-borrowed">Borrowed</span>
         <div class="stat-value text-danger">
           {{ formatCurrency(stats.summary.totalBorrowed) }}
         </div>
         <div class="stat-footnote">
-          <span>Pending: {{ formatCurrency(stats.borrowing.pending) }}</span>
+          <span>Pending: <strong class="footnote-borrowed">{{ formatCurrency(stats.borrowing.pending) }}</strong></span>
         </div>
       </div>
     </div>
@@ -145,12 +145,12 @@
         <span>🏦</span>
       </div>
       <div class="stat-content">
-        <span class="stat-category">Cash & Bank</span>
+        <span class="stat-category category-cash">Cash & Bank</span>
         <div class="stat-value text-primary">
           {{ formatCurrency(stats.summary.availableCash) }}
         </div>
         <div class="stat-footnote">
-          <span>Bank + Cash Reserve</span>
+          <span class="footnote-text">Bank + Cash Reserve</span>
         </div>
       </div>
     </div>
@@ -161,12 +161,12 @@
         <span>🧾</span>
       </div>
       <div class="stat-content">
-        <span class="stat-category">Total Outflows</span>
+        <span class="stat-category category-expenses">Total Outflows</span>
         <div class="stat-value text-danger">
           {{ formatCurrency(stats.summary.totalExpenses) }}
         </div>
         <div class="stat-footnote">
-          <span>Completed Expenses</span>
+          <span class="footnote-text">Completed Expenses</span>
         </div>
       </div>
     </div>
