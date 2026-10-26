@@ -140,7 +140,7 @@
 <!-- Add Person Modal -->
 @if (showAddPersonModal) {
 <div class="modal-backdrop" (click)="closeAddPersonModal()">
-  <div class="modal glass-card" (click)="$event.stopPropagation()">
+  <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Add New Person</h2>
       <button class="close-btn" (click)="closeAddPersonModal()"></button>
@@ -198,7 +198,7 @@
 <!-- Add Transaction Modal -->
 @if (showAddTransactionModal && selectedPerson) {
 <div class="modal-backdrop" (click)="closeAddTransactionModal()">
-  <div class="modal glass-card" (click)="$event.stopPropagation()">
+  <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Add Transaction - {{ selectedPerson.name }}</h2>
       <button class="close-btn" (click)="closeAddTransactionModal()"></button>
@@ -270,7 +270,7 @@
 <!-- Edit Transaction Modal -->
 @if (showEditTransactionModal) {
 <div class="modal-backdrop edit-modal" (click)="closeEditTransactionModal()">
-  <div class="modal glass-card" (click)="$event.stopPropagation()">
+  <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Edit Transaction</h2>
       <button class="close-btn" (click)="closeEditTransactionModal()">×</button>
@@ -344,7 +344,7 @@
 <!-- Person Details Modal -->
 @if (showPersonDetailsModal && selectedPerson) {
 <div class="modal-backdrop" (click)="closePersonDetailsModal()">
-  <div class="modal modal-large glass-card" (click)="$event.stopPropagation()">
+  <div class="modal modal-large" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <div>
         <h2>{{ selectedPerson.name }}</h2>
@@ -476,7 +476,7 @@
 <!-- Edit Person Modal -->
 @if (showEditPersonModal) {
 <div class="modal-backdrop edit-modal" (click)="closeEditPersonModal()">
-  <div class="modal glass-card" (click)="$event.stopPropagation()">
+  <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Edit Person</h2>
       <button class="close-btn" (click)="closeEditPersonModal()">×</button>
@@ -535,7 +535,7 @@
 <!-- Settle Up Modal -->
 @if (showSettleModal && settleTargetPerson) {
 <div class="modal-backdrop" (click)="closeSettleModal()">
-  <div class="modal glass-card settle-modal" (click)="$event.stopPropagation()">
+  <div class="modal settle-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <div>
         <span class="modal-badge-settle">Payment Settlement</span>

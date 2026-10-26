@@ -736,3 +736,151 @@ label {
   background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45) !important;
 }
+
+
+/* ========================================================
+   MODALS SYSTEM: OPAQUE, HIGH CONTRAST & ACCESSIBLE
+   ======================================================== */
+.modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(3, 7, 18, 0.88) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+  padding: 1.5rem !important;
+  overflow-y: auto !important;
+}
+
+.modal-backdrop.edit-modal {
+  z-index: 10099 !important;
+  background: rgba(3, 7, 18, 0.94) !important;
+}
+
+.modal {
+  width: 100% !important;
+  max-width: 540px !important;
+  max-height: calc(100vh - 3.5rem) !important;
+  background: #0d121f !important; /* Fully opaque deep surface */
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: var(--radius-xl, 18px) !important;
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+  padding: 1.85rem !important;
+  overflow-y: auto !important;
+  scrollbar-width: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.modal::-webkit-scrollbar {
+  display: none !important;
+}
+
+.modal-large {
+  max-width: 820px !important;
+}
+
+/* Modal Form Groups & Controls: Solid, high-contrast, perfectly elevated */
+.modal .form-group {
+  margin-bottom: 1.25rem !important;
+}
+
+.modal .form-control {
+  background: #151c2e !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #f8fafc !important;
+  padding: 0.8rem 1rem !important;
+  font-size: 0.92rem !important;
+  border-radius: var(--radius, 8px) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.modal .form-control:hover {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  background: #182136 !important;
+}
+
+.modal .form-control:focus {
+  background: #1b253d !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.modal label {
+  color: #cbd5e1 !important;
+  font-weight: 600 !important;
+  font-size: 0.82rem !important;
+  margin-bottom: 0.45rem !important;
+  display: block !important;
+}
+
+.modal .modal-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  margin-bottom: 1.5rem !important;
+  padding-bottom: 1rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.modal .modal-footer {
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 0.85rem !important;
+  margin-top: 1.5rem !important;
+  padding-top: 1rem !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Modal Internal Sections */
+.modal .detail-summary {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: 1.25rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.modal .transaction-item {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: none !important;
+  padding: 1rem 1.25rem !important;
+  border-radius: var(--radius-lg, 12px) !important;
+}
+
+.modal .transaction-item:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.settle-calc-preview {
+  margin-top: 0.5rem !important;
+  padding: 0.45rem 0.75rem !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  font-size: 0.82rem !important;
+}
+
+.person-meta, .person-detail {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  color: var(--text-tertiary) !important;
+  font-size: 0.85rem !important;
+}
+
+.meta-icon {
+  flex-shrink: 0;
+  color: var(--primary-light, #818cf8);
+}
