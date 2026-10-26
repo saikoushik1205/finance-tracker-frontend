@@ -2,46 +2,46 @@
   <div class="navbar-container">
     <div class="navbar-brand">
       <a routerLink="/dashboard" class="brand-link">
-        <span class="brand-icon">💰</span>
-        <span class="brand-text">FinTrack</span>
+        <div class="brand-icon-wrapper">
+          <span class="brand-icon">💰</span>
+        </div>
+        <div class="brand-text-group">
+          <span class="brand-text">FinTrack</span>
+          <span class="brand-badge">PRO</span>
+        </div>
       </a>
     </div>
 
     <div class="navbar-menu">
       <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
         <span class="nav-icon">📊</span>
-        <span>Dashboard</span>
+        <span class="nav-label">Dashboard</span>
       </a>
 
       <a routerLink="/lending" routerLinkActive="active" class="nav-link">
         <span class="nav-icon">💸</span>
-        <span>Lending</span>
+        <span class="nav-label">Lending</span>
       </a>
 
       <a routerLink="/borrowing" routerLinkActive="active" class="nav-link">
         <span class="nav-icon">💳</span>
-        <span>Borrowing</span>
+        <span class="nav-label">Borrowing</span>
       </a>
 
       <a routerLink="/earnings" routerLinkActive="active" class="nav-link">
         <span class="nav-icon">💵</span>
-        <span>Earnings</span>
+        <span class="nav-label">Earnings</span>
       </a>
 
       <a routerLink="/expenses" routerLinkActive="active" class="nav-link">
         <span class="nav-icon">🧾</span>
-        <span>Expenses</span>
-      </a>
-
-      <a routerLink="/other" routerLinkActive="active" class="nav-link">
-        <span class="nav-icon">🏦</span>
-        <span>Others</span>
+        <span class="nav-label">Expenses</span>
       </a>
     </div>
 
     @if (currentUser) {
       <div class="navbar-user">
-        <button class="user-button" (click)="toggleUserMenu()">
+        <button class="user-button" (click)="toggleUserMenu()" type="button" aria-label="User menu">
           @if (currentUser.photoURL) {
             <img
               [src]="currentUser.photoURL"
@@ -51,8 +51,8 @@
           } @else {
             <div class="user-avatar-placeholder">
               {{
-                currentUser.displayName.charAt(0) ||
-                  currentUser.email.charAt(0) ||
+                currentUser.displayName?.charAt(0) ||
+                  currentUser.email?.charAt(0) ||
                   "U"
               }}
             </div>
@@ -62,8 +62,9 @@
           </span>
           <svg
             class="chevron"
-            width="16"
-            height="16"
+            [class.rotate]="showUserMenu"
+            width="14"
+            height="14"
             viewBox="0 0 16 16"
             fill="currentColor"
           >
@@ -75,16 +76,19 @@
 
         @if (showUserMenu) {
           <div class="user-menu glass-card">
+            <div class="user-menu-header">
+              <span class="user-menu-email">{{ currentUser.email }}</span>
+            </div>
             <a
               routerLink="/profile"
               class="menu-item"
               (click)="showUserMenu = false"
             >
               <span class="menu-icon">👤</span>
-              <span>Profile</span>
+              <span>Profile & Settings</span>
             </a>
             <div class="menu-divider"></div>
-            <button class="menu-item logout" (click)="logout()">
+            <button class="menu-item logout" (click)="logout()" type="button">
               <span class="menu-icon">🚪</span>
               <span>Logout</span>
             </button>

@@ -63,9 +63,8 @@ export const routes: Routes = [
   },
   {
     path: "other",
-    loadComponent: () =>
-      import("./features/other/other.component").then((m) => m.OtherComponent),
-    canActivate: [authGuard],
+    redirectTo: "/dashboard",
+    pathMatch: "full",
   },
   {
     path: "profile",
