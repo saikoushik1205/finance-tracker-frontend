@@ -124,6 +124,61 @@ describe("Money Calculator Utility (Frontend)", () => {
       expect(result.pending).toBe(2000);
       expect(result.completed).toBe(0);
     });
+
+    it("accurately calculates settlements without misclassifying pending loans that mention settled via", () => {
+      const txs: Transaction[] = [
+        {
+          _id: "1",
+          personId: "p1",
+          userId: "u1",
+          date: new Date(),
+          amount: 426,
+          status: "completed",
+          type: "repayment",
+          remarks: "Settlement received: ₹426 via UPI / Online - PAY-PAL TRANSFER",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          _id: "2",
+          personId: "p1",
+          userId: "u1",
+          date: new Date(),
+          amount: 604,
+          status: "pending",
+          remarks: "Nothing Charger Order",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          _id: "3",
+          personId: "p1",
+          userId: "u1",
+          date: new Date(),
+          amount: 5385,
+          status: "pending",
+          remarks: "Mobile Order (Remaining pending after partial settlement)",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          _id: "4",
+          personId: "p1",
+          userId: "u1",
+          date: new Date(),
+          amount: 300,
+          status: "pending",
+          remarks: "Transfer | Settled via UPI / Online",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+      const result = calculatePersonStats(txs);
+      expect(result.total).toBe(6289);
+      expect(result.completed).toBe(426);
+      expect(result.pending).toBe(5863);
+      expect(result.transactionCount).toBe(4);
+    });
   });
 
   describe("reconcilePersonStats & aggregatePersons", () => {
